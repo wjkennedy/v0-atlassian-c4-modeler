@@ -17,6 +17,8 @@ import {
   MessageSquare,
   BarChart3,
   Zap,
+  Building,
+  Workflow,
 } from "lucide-react"
 
 interface ComponentSelectionProps {
@@ -90,6 +92,22 @@ const atlassianComponents = [
     color: "bg-emerald-500",
   },
   {
+    id: "jira-product-discovery",
+    name: "Jira Product Discovery",
+    description: "Product roadmap and discovery",
+    category: "Product Management",
+    icon: Workflow,
+    color: "bg-violet-500",
+  },
+  {
+    id: "trello",
+    name: "Trello",
+    description: "Visual project management boards",
+    category: "Core Products",
+    icon: Server,
+    color: "bg-blue-400",
+  },
+  {
     id: "bamboo",
     name: "Bamboo",
     description: "Continuous integration and deployment",
@@ -106,6 +124,30 @@ const atlassianComponents = [
     color: "bg-teal-500",
   },
   {
+    id: "fisheye-crucible",
+    name: "Fisheye & Crucible",
+    description: "Code review and repository browsing",
+    category: "DevOps",
+    icon: GitBranch,
+    color: "bg-cyan-500",
+  },
+  {
+    id: "atlassian-access",
+    name: "Atlassian Access",
+    description: "Enterprise security and user management",
+    category: "Security",
+    icon: Shield,
+    color: "bg-red-600",
+  },
+  {
+    id: "atlassian-analytics",
+    name: "Atlassian Analytics",
+    description: "Cross-product analytics and insights",
+    category: "Analytics",
+    icon: BarChart3,
+    color: "bg-purple-600",
+  },
+  {
     id: "statuspage",
     name: "Statuspage",
     description: "Status communication platform",
@@ -120,6 +162,14 @@ const atlassianComponents = [
     category: "Operations",
     icon: MessageSquare,
     color: "bg-red-500",
+  },
+  {
+    id: "atlassian-marketplace",
+    name: "Atlassian Marketplace",
+    description: "App marketplace and ecosystem",
+    category: "Platform",
+    icon: Building,
+    color: "bg-indigo-600",
   },
   {
     id: "database-primary",

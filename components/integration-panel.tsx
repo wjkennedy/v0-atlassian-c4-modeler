@@ -19,6 +19,10 @@ import {
   Lock,
   GitBranch,
   Server,
+  Smartphone,
+  Monitor,
+  Workflow,
+  Brain,
 } from "lucide-react"
 
 interface IntegrationPanelProps {
@@ -84,12 +88,36 @@ const integrations = [
     color: "bg-blue-700",
   },
   {
+    id: "ping-identity",
+    name: "Ping Identity",
+    description: "Enterprise identity and access management",
+    category: "Security",
+    icon: Shield,
+    color: "bg-yellow-600",
+  },
+  {
+    id: "auth0",
+    name: "Auth0",
+    description: "Identity platform for developers",
+    category: "Security",
+    icon: Lock,
+    color: "bg-orange-500",
+  },
+  {
     id: "google-workspace",
     name: "Google Workspace",
     description: "Google productivity and collaboration tools",
     category: "Productivity",
     icon: Mail,
     color: "bg-red-500",
+  },
+  {
+    id: "microsoft-365",
+    name: "Microsoft 365",
+    description: "Microsoft productivity suite",
+    category: "Productivity",
+    icon: Mail,
+    color: "bg-blue-600",
   },
   {
     id: "slack",
@@ -116,6 +144,14 @@ const integrations = [
     color: "bg-blue-400",
   },
   {
+    id: "webex",
+    name: "Cisco Webex",
+    description: "Enterprise video conferencing",
+    category: "Communication",
+    icon: Users,
+    color: "bg-green-600",
+  },
+  {
     id: "tableau",
     name: "Tableau",
     description: "Business intelligence and analytics",
@@ -140,6 +176,22 @@ const integrations = [
     color: "bg-green-500",
   },
   {
+    id: "qlik",
+    name: "Qlik Sense",
+    description: "Self-service data analytics",
+    category: "Analytics",
+    icon: BarChart3,
+    color: "bg-green-700",
+  },
+  {
+    id: "splunk",
+    name: "Splunk",
+    description: "Data platform for security and observability",
+    category: "Analytics",
+    icon: BarChart3,
+    color: "bg-orange-700",
+  },
+  {
     id: "jenkins",
     name: "Jenkins",
     description: "Continuous integration and deployment",
@@ -162,6 +214,22 @@ const integrations = [
     category: "DevOps",
     icon: Zap,
     color: "bg-green-600",
+  },
+  {
+    id: "teamcity",
+    name: "TeamCity",
+    description: "JetBrains CI/CD server",
+    category: "DevOps",
+    icon: Zap,
+    color: "bg-blue-500",
+  },
+  {
+    id: "terraform",
+    name: "Terraform",
+    description: "Infrastructure as code",
+    category: "DevOps",
+    icon: Server,
+    color: "bg-purple-600",
   },
   {
     id: "aws",
@@ -203,6 +271,30 @@ const integrations = [
     icon: Server,
     color: "bg-indigo-600",
   },
+  {
+    id: "datadog",
+    name: "Datadog",
+    description: "Monitoring and analytics platform",
+    category: "Monitoring",
+    icon: Monitor,
+    color: "bg-purple-500",
+  },
+  {
+    id: "new-relic",
+    name: "New Relic",
+    description: "Application performance monitoring",
+    category: "Monitoring",
+    icon: Monitor,
+    color: "bg-green-500",
+  },
+  {
+    id: "pagerduty",
+    name: "PagerDuty",
+    description: "Incident response platform",
+    category: "Monitoring",
+    icon: Smartphone,
+    color: "bg-green-600",
+  },
 ]
 
 const internalConcerns = [
@@ -235,7 +327,7 @@ const internalConcerns = [
     name: "Work Item Classifier",
     description: "AI-powered work item classification",
     category: "AI/ML",
-    icon: Settings,
+    icon: Brain,
     color: "bg-indigo-600",
   },
   {
@@ -245,6 +337,30 @@ const internalConcerns = [
     category: "Data",
     icon: Database,
     color: "bg-cyan-600",
+  },
+  {
+    id: "notification-service",
+    name: "Notification Service",
+    description: "Centralized notification management",
+    category: "Communication",
+    icon: Mail,
+    color: "bg-blue-500",
+  },
+  {
+    id: "workflow-engine",
+    name: "Workflow Engine",
+    description: "Custom business process workflows",
+    category: "Automation",
+    icon: Workflow,
+    color: "bg-orange-600",
+  },
+  {
+    id: "integration-hub",
+    name: "Integration Hub",
+    description: "Central integration management platform",
+    category: "Integration",
+    icon: Settings,
+    color: "bg-teal-600",
   },
 ]
 

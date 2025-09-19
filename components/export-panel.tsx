@@ -274,21 +274,72 @@ graph TD
     URL.revokeObjectURL(url)
   }
 
-  const handleExportImage = () => {
+  const handleExportImage = async () => {
     const markup = generateAllLevels ? generateAllLevelsMarkup() : generateC4Markup()
-    const encodedMarkup = encodeURIComponent(markup)
 
-    if (exportFormat === "plantuml") {
-      window.open(`http://www.plantuml.com/plantuml/uml/${encodedMarkup}`, "_blank")
-    } else if (exportFormat === "mermaid") {
-      window.open(`https://mermaid.live/edit#pako:${btoa(markup)}`, "_blank")
+    if (exportFormat === "mermaid") {
+      try {
+        // Use local Mermaid rendering instead of external service
+        const mermaid = (await import("mermaid")).default
+
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: "base",
+          themeVariables: {
+            primaryColor: "#0052cc",
+            primaryTextColor: "#ffffff",
+            primaryBorderColor: "#0052cc",
+            lineColor: "#6b7280",
+          },
+        })
+
+        const diagramId = `export-${Date.now()}`
+        const { svg } = await mermaid.render(diagramId, markup)
+
+        // Create a downloadable SVG file
+        const blob = new Blob([svg], { type: "image/svg+xml" })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = `${config.title.toLowerCase().replace(/\s+/g, "-")}-diagram.svg`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      } catch (error) {
+        console.error("[v0] Failed to render Mermaid diagram:", error)
+        alert("Failed to render diagram. Please try again.")
+      }
+    } else if (exportFormat === "plantuml") {
+      // For PlantUML, create a downloadable file instead of external link
+      const blob = new Blob([markup], { type: "text/plain" })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `${config.title.toLowerCase().replace(/\s+/g, "-")}-diagram.puml`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } else {
+      // For other formats, download the markup file
+      const extension = exportFormat === "structurizr" ? "dsl" : "txt"
+      const blob = new Blob([markup], { type: "text/plain" })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `${config.title.toLowerCase().replace(/\s+/g, "-")}-diagram.${extension}`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
     }
   }
 
   const getFormatDescription = () => {
     const descriptions = {
       plantuml: "Industry-standard C4 model notation with PlantUML. Best for documentation and presentations.",
-      mermaid: "Modern diagram-as-code format. Great for GitHub integration and web rendering.",
+      mermaid: "Modern diagram-as-code format. Great for GitHub integration and local rendering.",
       structurizr: "Structurizr DSL format. Perfect for architecture modeling and multiple view generation.",
     }
     return descriptions[exportFormat as keyof typeof descriptions] || ""
@@ -373,7 +424,7 @@ graph TD
           <div className="grid grid-cols-2 gap-2">
             <Button onClick={handleDownload} className="flex-1">
               <Download className="h-4 w-4 mr-2" />
-              Download
+              Download Markup
             </Button>
             <Button variant="outline" onClick={handleCopy} className="flex-1 bg-transparent">
               {copied ? <CheckCircle className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
@@ -493,11 +544,11 @@ graph TD
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Button variant="outline" className="h-20 flex-col bg-transparent" onClick={handleExportImage}>
                     <ImageIcon className="h-6 w-6 mb-2" />
-                    <span className="text-sm">Render Image</span>
+                    <span className="text-sm">{exportFormat === "mermaid" ? "Download SVG" : "Download File"}</span>
                   </Button>
                   <Button variant="outline" className="h-20 flex-col bg-transparent" onClick={handleDownload}>
                     <FileText className="h-6 w-6 mb-2" />
-                    <span className="text-sm">Download File</span>
+                    <span className="text-sm">Download Markup</span>
                   </Button>
                   <Button variant="outline" className="h-20 flex-col bg-transparent" onClick={handleCopy}>
                     <Share2 className="h-6 w-6 mb-2" />
@@ -509,11 +560,11 @@ graph TD
                   <h4 className="font-medium mb-2">Export Tips</h4>
                   <ul className="text-sm text-muted-foreground space-y-1">
                     <li>• Use PlantUML for professional documentation and presentations</li>
-                    <li>• Choose Mermaid for GitHub README files and web integration</li>
+                    <li>• Choose Mermaid for GitHub README files and local rendering</li>
                     <li>• Select Structurizr DSL for comprehensive architecture modeling</li>
-                    <li>• Click "Render Image" to visualize your diagram online</li>
+                    <li>• Mermaid diagrams render locally and can be exported as SVG images</li>
                     {generateAllLevels && (
-                      <li>• "All Levels" generates Context, Container, Component, and Code diagrams</li>
+                      <li>• "All Levels" generates Landscape, Context, Container, Component, and Code diagrams</li>
                     )}
                   </ul>
                 </div>

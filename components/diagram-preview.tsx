@@ -4,7 +4,9 @@ import { useEffect, useRef, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ZoomIn, ZoomOut, RotateCcw, Maximize2 } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ZoomIn, ZoomOut, RotateCcw, Maximize2, RefreshCw } from "lucide-react"
+import { createMultiLevelAtlassianC4Model, type MultiLevelC4Model } from "@/lib/c4-generator"
 
 interface DiagramPreviewProps {
   components: string[]
@@ -16,291 +18,172 @@ interface DiagramPreviewProps {
   }
 }
 
-interface DiagramNode {
-  id: string
-  name: string
-  type: "person" | "system" | "container" | "component" | "integration"
-  description: string
-  x: number
-  y: number
-  width: number
-  height: number
-  color: string
-  connections: string[]
-}
-
 export function DiagramPreview({ components, integrations, config }: DiagramPreviewProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const mermaidRef = useRef<HTMLDivElement>(null)
   const [zoom, setZoom] = useState(1)
-  const [nodes, setNodes] = useState<DiagramNode[]>([])
-  const [refreshKey, setRefreshKey] = useState(0) // Added refresh key for live preview updates
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [selectedLevel, setSelectedLevel] = useState<keyof MultiLevelC4Model>("context")
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     setRefreshKey((prev) => prev + 1)
   }, [components, integrations, config])
 
-  // Generate diagram nodes based on selected components and integrations
   useEffect(() => {
-    const generateNodes = () => {
-      const newNodes: DiagramNode[] = []
-      const yOffset = 100
+    const renderDiagram = async () => {
+      if (!mermaidRef.current || components.length === 0) return
 
-      // Add a user/person node
-      if (components.length > 0) {
-        newNodes.push({
-          id: "user",
-          name: "Solution Partner",
-          type: "person",
-          description: "Atlassian solution partner managing enterprise architecture",
-          x: 50,
-          y: 50,
-          width: 160,
-          height: 80,
-          color: "#0891b2",
-          connections: components.slice(0, 3), // Connect to first few components
-        })
-      }
+      setIsLoading(true)
+      setError(null)
 
-      // Add Atlassian components as containers
-      components.forEach((componentId, index) => {
-        const componentData = getComponentData(componentId)
-        if (componentData) {
-          newNodes.push({
-            id: componentId,
-            name: componentData.name,
-            type: "container",
-            description: componentData.description,
-            x: 300 + (index % 3) * 200,
-            y: yOffset + Math.floor(index / 3) * 120,
-            width: 180,
-            height: 100,
-            color: componentData.color,
-            connections: integrations.filter((_, i) => i < 2), // Connect to some integrations
-          })
-        }
-      })
+      try {
+        // Dynamically import Mermaid
+        const mermaid = (await import("mermaid")).default
 
-      const hasCICD =
-        integrations.some((id) => ["jenkins", "github", "azure-devops", "circleci"].includes(id)) ||
-        components.includes("bitbucket")
-
-      if (hasCICD) {
-        newNodes.push({
-          id: "cicd_pipeline",
-          name: "CI/CD Pipeline",
-          type: "container",
-          description: "Automated build and deployment",
-          x: 550,
-          y: 300,
-          width: 180,
-          height: 100,
-          color: "#dc2626",
-          connections: ["artifact_repo"],
+        // Initialize Mermaid with C4 theme
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: "base",
+          themeVariables: {
+            primaryColor: "#0052cc",
+            primaryTextColor: "#ffffff",
+            primaryBorderColor: "#0052cc",
+            lineColor: "#6b7280",
+            sectionBkgColor: "#f8fafc",
+            altSectionBkgColor: "#f1f5f9",
+            gridColor: "#e2e8f0",
+            c4PersonBkg: "#08427b",
+            c4PersonBorder: "#073b6f",
+            c4SystemBkg: "#1168bd",
+            c4SystemBorder: "#0b4884",
+            c4ContainerBkg: "#438dd5",
+            c4ContainerBorder: "#2563eb",
+            c4ComponentBkg: "#85bbf0",
+            c4ComponentBorder: "#3b82f6",
+          },
+          c4: {
+            personFontSize: 14,
+            personFontFamily: "Arial",
+            personFontWeight: "normal",
+            systemFontSize: 14,
+            systemFontFamily: "Arial",
+            systemFontWeight: "normal",
+          },
         })
 
-        newNodes.push({
-          id: "artifact_repo",
-          name: "Artifact Repository",
-          type: "container",
-          description: "Build artifacts storage",
-          x: 750,
-          y: 300,
-          width: 180,
-          height: 100,
-          color: "#7c3aed",
-          connections: [],
-        })
-      }
+        // Generate the multi-level model
+        const multiModel = createMultiLevelAtlassianC4Model(components, integrations, config.title)
+        const selectedModel = multiModel[selectedLevel]
 
-      // Add integrations as external systems
-      integrations.forEach((integrationId, index) => {
-        const integrationData = getIntegrationData(integrationId)
-        if (integrationData) {
-          newNodes.push({
-            id: integrationId,
-            name: integrationData.name,
-            type: "system",
-            description: integrationData.description,
-            x: 700 + (index % 2) * 220,
-            y: 150 + Math.floor(index / 2) * 120,
-            width: 200,
-            height: 100,
-            color: integrationData.color,
-            connections: [],
-          })
+        const mermaidSyntax = generateMermaidC4Diagram(selectedModel)
+
+        // Clear previous content
+        mermaidRef.current.innerHTML = ""
+
+        // Create a unique ID for this diagram
+        const diagramId = `mermaid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
+        // Render the diagram
+        const { svg } = await mermaid.render(diagramId, mermaidSyntax)
+
+        if (mermaidRef.current) {
+          mermaidRef.current.innerHTML = svg
+
+          // Apply zoom to the SVG
+          const svgElement = mermaidRef.current.querySelector("svg")
+          if (svgElement) {
+            svgElement.style.transform = `scale(${zoom})`
+            svgElement.style.transformOrigin = "top left"
+            svgElement.style.width = `${100 / zoom}%`
+            svgElement.style.height = `${100 / zoom}%`
+          }
         }
-      })
+      } catch (err) {
+        console.error("[v0] Mermaid rendering error:", err)
+        setError(err instanceof Error ? err.message : "Failed to render diagram")
 
-      setNodes(newNodes)
-    }
-
-    generateNodes()
-  }, [components, integrations, refreshKey]) // Added refreshKey dependency
-
-  // Draw the diagram
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
-
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-    // Set up canvas scaling
-    ctx.save()
-    ctx.scale(zoom, zoom)
-
-    // Draw connections first (so they appear behind nodes)
-    nodes.forEach((node) => {
-      node.connections.forEach((connectionId) => {
-        const targetNode = nodes.find((n) => n.id === connectionId)
-        if (targetNode) {
-          drawConnection(ctx, node, targetNode)
+        // Fallback to simple text representation
+        if (mermaidRef.current) {
+          mermaidRef.current.innerHTML = `
+            <div class="p-8 text-center text-gray-500">
+              <p class="mb-2">Diagram rendering failed</p>
+              <p class="text-sm">${error || "Unknown error"}</p>
+              <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded">
+                Retry
+              </button>
+            </div>
+          `
         }
-      })
-    })
-
-    // Draw nodes
-    nodes.forEach((node) => {
-      drawNode(ctx, node)
-    })
-
-    // Draw title
-    ctx.fillStyle = "#374151"
-    ctx.font = "bold 24px sans-serif"
-    ctx.fillText(config.title, 20, 30)
-
-    // Draw level indicator
-    ctx.fillStyle = "#6b7280"
-    ctx.font = "14px sans-serif"
-    ctx.fillText(`Level: ${config.level.charAt(0).toUpperCase() + config.level.slice(1)}`, 20, 55)
-
-    ctx.restore()
-  }, [nodes, zoom, config])
-
-  const drawNode = (ctx: CanvasRenderingContext2D, node: DiagramNode) => {
-    const { x, y, width, height, name, type, description, color } = node
-
-    // Draw shadow
-    ctx.fillStyle = "rgba(0, 0, 0, 0.1)"
-    ctx.fillRect(x + 2, y + 2, width, height)
-
-    // Draw main rectangle
-    ctx.fillStyle = "#ffffff"
-    ctx.fillRect(x, y, width, height)
-
-    // Draw border based on type
-    ctx.strokeStyle = color
-    ctx.lineWidth = type === "person" ? 3 : 2
-    if (type === "person") {
-      // Draw rounded rectangle for person
-      drawRoundedRect(ctx, x, y, width, height, 10)
-    } else {
-      ctx.strokeRect(x, y, width, height)
-    }
-
-    // Draw type indicator
-    ctx.fillStyle = color
-    ctx.fillRect(x, y, width, 25)
-
-    // Draw type label
-    ctx.fillStyle = "#ffffff"
-    ctx.font = "bold 12px sans-serif"
-    const typeLabel = type.charAt(0).toUpperCase() + type.slice(1)
-    ctx.fillText(typeLabel, x + 8, y + 17)
-
-    // Draw name
-    ctx.fillStyle = "#1f2937"
-    ctx.font = "bold 14px sans-serif"
-    const nameLines = wrapText(ctx, name, width - 16)
-    nameLines.forEach((line, index) => {
-      ctx.fillText(line, x + 8, y + 45 + index * 16)
-    })
-
-    // Draw description
-    ctx.fillStyle = "#6b7280"
-    ctx.font = "11px sans-serif"
-    const descLines = wrapText(ctx, description, width - 16)
-    descLines.slice(0, 2).forEach((line, index) => {
-      ctx.fillText(line, x + 8, y + 65 + nameLines.length * 16 + index * 14)
-    })
-  }
-
-  const drawConnection = (ctx: CanvasRenderingContext2D, from: DiagramNode, to: DiagramNode) => {
-    const fromX = from.x + from.width / 2
-    const fromY = from.y + from.height / 2
-    const toX = to.x + to.width / 2
-    const toY = to.y + to.height / 2
-
-    ctx.strokeStyle = "#9ca3af"
-    ctx.lineWidth = 2
-    ctx.setLineDash([5, 5])
-
-    ctx.beginPath()
-    ctx.moveTo(fromX, fromY)
-    ctx.lineTo(toX, toY)
-    ctx.stroke()
-
-    // Draw arrow
-    const angle = Math.atan2(toY - fromY, toX - fromX)
-    const arrowLength = 10
-    ctx.setLineDash([])
-    ctx.beginPath()
-    ctx.moveTo(toX, toY)
-    ctx.lineTo(toX - arrowLength * Math.cos(angle - Math.PI / 6), toY - arrowLength * Math.sin(angle - Math.PI / 6))
-    ctx.moveTo(toX, toY)
-    ctx.lineTo(toX - arrowLength * Math.cos(angle + Math.PI / 6), toY - arrowLength * Math.sin(angle + Math.PI / 6))
-    ctx.stroke()
-  }
-
-  const drawRoundedRect = (
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    radius: number,
-  ) => {
-    ctx.beginPath()
-    ctx.moveTo(x + radius, y)
-    ctx.lineTo(x + width - radius, y)
-    ctx.quadraticCurveTo(x + width, y, x + width, y + radius)
-    ctx.lineTo(x + width, y + height - radius)
-    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height)
-    ctx.lineTo(x + radius, y + height)
-    ctx.quadraticCurveTo(x, y + height, x, y + height - radius)
-    ctx.lineTo(x, y + radius)
-    ctx.quadraticCurveTo(x, y, x + radius, y)
-    ctx.closePath()
-    ctx.stroke()
-  }
-
-  const wrapText = (ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] => {
-    const words = text.split(" ")
-    const lines: string[] = []
-    let currentLine = words[0]
-
-    for (let i = 1; i < words.length; i++) {
-      const word = words[i]
-      const width = ctx.measureText(currentLine + " " + word).width
-      if (width < maxWidth) {
-        currentLine += " " + word
-      } else {
-        lines.push(currentLine)
-        currentLine = word
+      } finally {
+        setIsLoading(false)
       }
     }
-    lines.push(currentLine)
-    return lines
+
+    renderDiagram()
+  }, [components, integrations, config, selectedLevel, refreshKey, zoom, error])
+
+  const generateMermaidC4Diagram = (model: any): string => {
+    const levelTitles = {
+      landscape: "System Landscape",
+      context: "System Context",
+      container: "Container",
+      component: "Component",
+      code: "Code",
+    }
+
+    let mermaid = `---
+title: ${model.title} - ${levelTitles[model.level as keyof typeof levelTitles]} Diagram
+---
+C4${model.level.charAt(0).toUpperCase() + model.level.slice(1)}
+
+`
+
+    // Add elements based on type
+    model.elements.forEach((element: any) => {
+      const cleanId = element.id.replace(/[^a-zA-Z0-9]/g, "_")
+      const cleanName = element.name.replace(/"/g, '\\"')
+      const cleanDesc = element.description.replace(/"/g, '\\"')
+      const tech = element.technology ? `, "${element.technology.replace(/"/g, '\\"')}"` : ""
+
+      switch (element.type) {
+        case "person":
+          mermaid += `    Person(${cleanId}, "${cleanName}", "${cleanDesc}")\n`
+          break
+        case "system":
+          mermaid += `    System(${cleanId}, "${cleanName}", "${cleanDesc}"${tech})\n`
+          break
+        case "container":
+          mermaid += `    Container(${cleanId}, "${cleanName}", "${cleanDesc}"${tech})\n`
+          break
+        case "component":
+          mermaid += `    Component(${cleanId}, "${cleanName}", "${cleanDesc}"${tech})\n`
+          break
+        default:
+          mermaid += `    System(${cleanId}, "${cleanName}", "${cleanDesc}"${tech})\n`
+      }
+    })
+
+    mermaid += "\n"
+
+    // Add relationships
+    model.relationships.forEach((rel: any) => {
+      const cleanFrom = rel.from.replace(/[^a-zA-Z0-9]/g, "_")
+      const cleanTo = rel.to.replace(/[^a-zA-Z0-9]/g, "_")
+      const cleanDesc = rel.description.replace(/"/g, '\\"')
+      const tech = rel.technology ? `, "${rel.technology.replace(/"/g, '\\"')}"` : ""
+
+      mermaid += `    Rel(${cleanFrom}, ${cleanTo}, "${cleanDesc}"${tech})\n`
+    })
+
+    return mermaid
   }
 
   const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.1, 3))
   const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.1, 0.3))
   const handleReset = () => {
     setZoom(1)
-    setRefreshKey((prev) => prev + 1) // Force refresh
+    setRefreshKey((prev) => prev + 1)
   }
 
   const handleRefresh = () => {
@@ -312,20 +195,33 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
       {/* Controls */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleZoomOut}>
+          <Select value={selectedLevel} onValueChange={(value) => setSelectedLevel(value as keyof MultiLevelC4Model)}>
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="landscape">System Landscape</SelectItem>
+              <SelectItem value="context">System Context</SelectItem>
+              <SelectItem value="container">Container</SelectItem>
+              <SelectItem value="component">Component</SelectItem>
+              <SelectItem value="code">Code</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button variant="outline" size="sm" onClick={handleZoomOut} disabled={isLoading}>
             <ZoomOut className="h-4 w-4" />
           </Button>
           <Badge variant="outline" className="px-3">
             {Math.round(zoom * 100)}%
           </Badge>
-          <Button variant="outline" size="sm" onClick={handleZoomIn}>
+          <Button variant="outline" size="sm" onClick={handleZoomIn} disabled={isLoading}>
             <ZoomIn className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="sm" onClick={handleReset}>
+          <Button variant="outline" size="sm" onClick={handleReset} disabled={isLoading}>
             <RotateCcw className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="sm" onClick={handleRefresh}>
-            Refresh
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
+            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
           </Button>
         </div>
         <Button variant="outline" size="sm">
@@ -333,42 +229,58 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
         </Button>
       </div>
 
-      {/* Canvas */}
+      {/* Diagram Canvas */}
       <Card className="p-4">
-        <div className="relative overflow-auto max-h-96 border rounded-lg">
-          <canvas
-            ref={canvasRef}
-            width={1200}
-            height={800}
-            className="border-0 bg-gray-50"
+        <div className="relative overflow-auto max-h-96 border rounded-lg bg-white">
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
+              <div className="flex items-center gap-2 text-gray-600">
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                <span>Rendering diagram...</span>
+              </div>
+            </div>
+          )}
+
+          <div
+            ref={mermaidRef}
+            className="min-h-64 w-full overflow-auto"
             style={{ minWidth: "100%", minHeight: "300px" }}
           />
+
+          {components.length === 0 && !isLoading && (
+            <div className="flex items-center justify-center h-64 text-gray-500">
+              <div className="text-center">
+                <p className="mb-2">No components selected</p>
+                <p className="text-sm">Select components and integrations to generate a diagram</p>
+              </div>
+            </div>
+          )}
         </div>
       </Card>
 
       {/* Legend */}
       <Card className="p-4">
-        <h4 className="font-medium mb-3">Diagram Legend</h4>
+        <h4 className="font-medium mb-3">C4 Model Legend</h4>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-blue-500 rounded border-2 border-blue-500"></div>
+            <div className="w-4 h-4 bg-[#08427b] rounded border-2 border-[#073b6f]"></div>
             <span>Person/Actor</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-green-500 border-2 border-green-500"></div>
+            <div className="w-4 h-4 bg-[#1168bd] border-2 border-[#0b4884]"></div>
+            <span>Software System</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-[#438dd5] border-2 border-[#2563eb]"></div>
             <span>Container</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-purple-500 border-2 border-purple-500"></div>
-            <span>External System</span>
+            <div className="w-4 h-4 bg-[#85bbf0] border-2 border-[#3b82f6]"></div>
+            <span>Component</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 border-2 border-gray-400 bg-white"></div>
-            <span>Integration</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-red-500 border-2 border-red-500"></div>
-            <span>CI/CD Pipeline</span>
+            <span>External System</span>
           </div>
         </div>
       </Card>

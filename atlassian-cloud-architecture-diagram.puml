@@ -1,0 +1,50 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Atlassian Cloud Architecture - Container Diagram
+
+
+Person(user, "Solution Partner", "Atlassian solution partner managing enterprise architecture")
+Container(jira-software, "Jira Software", "Atlassian Cloud", "Project management and issue tracking")
+Container(jira-service-management, "Jira Service Management", "Atlassian Cloud", "IT service management platform")
+Container(confluence, "Confluence", "Atlassian Cloud", "Team collaboration and documentation")
+Container(atlas, "Atlas", "Atlassian Cloud", "Team directory and insights")
+Container(compass, "Compass", "Atlassian Cloud", "Developer experience platform")
+Container(jira-align, "Jira Align", "Atlassian Cloud", "Enterprise agile planning")
+Container(bamboo, "Bamboo", "Atlassian Cloud", "Continuous integration and deployment")
+Container(crowd, "Crowd", "Atlassian Cloud", "Identity management and single sign-on")
+Container(database-analytics, "Analytics Database", "Atlassian Cloud", "Data warehouse and analytics")
+Container(database-primary, "Primary Database", "Atlassian Cloud", "Main application database")
+System(servicenow, "ServiceNow", "IT service management and workflow automation")
+System(salesforce, "Salesforce", "Customer relationship management")
+System(jenkins, "Jenkins", "Continuous integration and deployment")
+System(github-enterprise, "GitHub Enterprise", "Enterprise code repository and collaboration")
+System(okta, "Okta", "Identity and access management")
+System(google-workspace, "Google Workspace", "Google productivity and collaboration tools")
+System(slack, "Slack", "Team communication and collaboration")
+System(microsoft-teams, "Microsoft Teams", "Unified communication platform")
+System(tableau, "Tableau", "Business intelligence and analytics")
+System(aws, "Amazon Web Services", "Cloud infrastructure and services")
+
+Rel(user, jira-software, "Uses")
+Rel(user, jira-service-management, "Uses")
+Rel(user, confluence, "Uses")
+Rel(user, atlas, "Uses")
+Rel(user, compass, "Uses")
+Rel(user, jira-align, "Uses")
+Rel(user, bamboo, "Uses")
+Rel(user, crowd, "Uses")
+Rel(user, database-analytics, "Uses")
+Rel(user, database-primary, "Uses")
+Rel(jira-software, servicenow, "Integrates with", "HTTPS/REST API")
+Rel(jira-software, salesforce, "Integrates with", "HTTPS/REST API")
+Rel(jira-software, jenkins, "Integrates with", "HTTPS/REST API")
+Rel(jira-software, github-enterprise, "Integrates with", "HTTPS/REST API")
+Rel(jira-software, okta, "Integrates with", "HTTPS/REST API")
+Rel(jira-software, google-workspace, "Integrates with", "HTTPS/REST API")
+Rel(jira-software, slack, "Integrates with", "HTTPS/REST API")
+Rel(jira-software, microsoft-teams, "Integrates with", "HTTPS/REST API")
+Rel(jira-software, tableau, "Integrates with", "HTTPS/REST API")
+Rel(jira-software, aws, "Integrates with", "HTTPS/REST API")
+
+@enduml

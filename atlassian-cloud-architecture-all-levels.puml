@@ -1,29 +1,4 @@
-# Atlassian C4 modeler
 
-
-## Overview
-
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
-
-## Deployment
-
-Your project is live at:
-
-**[https://vercel.com/wjkennedys-projects/v0-atlassian-c4-modeler](https://vercel.com/wjkennedys-projects/v0-atlassian-c4-modeler)**
-
-## Build 
-
-    npm install
-    npm run build
-    npm run dev
-
-**Visit** [http://localhost:3000](http://localhost:3000)
-
-
-## Example output
-
-`
 
 // ========== LANDSCAPE DIAGRAM ==========
 
@@ -190,17 +165,4 @@ Rel(IssueController, IssueService, "Uses")
 Rel(IssueService, IssueRepository, "Uses")
 Rel(IssueRepository, Issue, "Manages")
 
-@enduml`
-
-## Screenshot
-
-![](screenshot1.png)
-
-----
-
-![](screenshot2.png)
-
-----
-
-![](screenshot2.png)
-
+@enduml

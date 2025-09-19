@@ -7,8 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Download, Copy, FileText, ImageIcon, Share2, CheckCircle } from "lucide-react"
-import { createAtlassianC4Model } from "@/lib/c4-generator"
+import { Download, Copy, FileText, ImageIcon, Share2, CheckCircle, Layers } from "lucide-react"
+import { createAtlassianC4Model, createMultiLevelAtlassianC4Model, type MultiLevelC4Model } from "@/lib/c4-generator"
 
 interface ExportPanelProps {
   selectedComponents: string[]
@@ -23,33 +23,242 @@ interface ExportPanelProps {
 export function ExportPanel({ selectedComponents, selectedIntegrations, config }: ExportPanelProps) {
   const [exportFormat, setExportFormat] = useState("plantuml")
   const [copied, setCopied] = useState(false)
+  const [generateAllLevels, setGenerateAllLevels] = useState(false)
+  const [selectedLevel, setSelectedLevel] = useState<keyof MultiLevelC4Model>("context")
 
   const generateC4Markup = () => {
-    const generator = createAtlassianC4Model(selectedComponents, selectedIntegrations, config)
+    if (generateAllLevels) {
+      const multiModel = createMultiLevelAtlassianC4Model(selectedComponents, selectedIntegrations, config.title)
+      const selectedModel = multiModel[selectedLevel]
 
-    switch (exportFormat) {
-      case "plantuml":
-        return generator.generatePlantUML()
-      case "mermaid":
-        return generator.generateMermaid()
-      case "structurizr":
-        return generator.generateStructurizr()
-      default:
-        return generator.generatePlantUML()
+      const tempGenerator = {
+        generatePlantUML: () => generatePlantUMLForModel(selectedModel),
+        generateMermaid: () => generateMermaidForModel(selectedModel),
+        generateStructurizr: () => generateStructurizrForModel(selectedModel),
+      }
+
+      switch (exportFormat) {
+        case "plantuml":
+          return tempGenerator.generatePlantUML()
+        case "mermaid":
+          return tempGenerator.generateMermaid()
+        case "structurizr":
+          return tempGenerator.generateStructurizr()
+        default:
+          return tempGenerator.generatePlantUML()
+      }
+    } else {
+      const generator = createAtlassianC4Model(selectedComponents, selectedIntegrations, config)
+      switch (exportFormat) {
+        case "plantuml":
+          return generator.generatePlantUML()
+        case "mermaid":
+          return generator.generateMermaid()
+        case "structurizr":
+          return generator.generateStructurizr()
+        default:
+          return generator.generatePlantUML()
+      }
     }
   }
 
+  const generatePlantUMLForModel = (model: any) => {
+    const includeMap = {
+      context: "C4_Context.puml",
+      container: "C4_Container.puml",
+      component: "C4_Component.puml",
+      code: "C4_Component.puml",
+    }
+
+    let puml = `@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/${includeMap[model.level]}
+
+title ${model.title} - ${model.level.charAt(0).toUpperCase() + model.level.slice(1)} Diagram
+${model.description ? `\n!define DESCRIPTION ${model.description}` : ""}
+
+`
+
+    model.elements.forEach((element: any) => {
+      const elementType = getPlantUMLElementType(element.type)
+      const tech = element.technology ? `, "${element.technology}"` : ""
+      puml += `${elementType}(${element.id}, "${element.name}"${tech}, "${element.description}")
+`
+    })
+
+    puml += `
+`
+
+    model.relationships.forEach((rel: any) => {
+      const tech = rel.technology ? `, "${rel.technology}"` : ""
+      puml += `Rel(${rel.from}, ${rel.to}, "${rel.description}"${tech})
+`
+    })
+
+    puml += `
+@enduml`
+    return puml
+  }
+
+  const generateMermaidForModel = (model: any) => {
+    let mermaid = `---
+title: ${model.title} - ${model.level.charAt(0).toUpperCase() + model.level.slice(1)} Diagram
+---
+graph TD
+
+`
+
+    model.elements.forEach((element: any) => {
+      const shape = getMermaidShape(element.type)
+      const tech = element.technology ? `<br/><i>${element.technology}</i>` : ""
+      mermaid += `    ${element.id}${shape.replace("${type}", `${element.name}${tech}<br/>${element.description}`)}
+`
+    })
+
+    mermaid += `
+`
+
+    model.relationships.forEach((rel: any) => {
+      const tech = rel.technology ? ` (${rel.technology})` : ""
+      mermaid += `    ${rel.from} -->|${rel.description}${tech}| ${rel.to}
+`
+    })
+
+    mermaid += `
+    classDef person fill:#08427b
+    classDef system fill:#1168bd
+    classDef container fill:#438dd5
+    classDef component fill:#85bbf0
+`
+
+    model.elements.forEach((element: any) => {
+      mermaid += `    class ${element.id} ${element.type}
+`
+    })
+
+    return mermaid
+  }
+
+  const generateStructurizrForModel = (model: any) => {
+    let dsl = `workspace "${model.title} - ${model.level.charAt(0).toUpperCase() + model.level.slice(1)} Diagram" {
+    model {
+`
+
+    const people = model.elements.filter((e: any) => e.type === "person")
+    const systems = model.elements.filter((e: any) => e.type === "system")
+    const containers = model.elements.filter((e: any) => e.type === "container")
+
+    people.forEach((person: any) => {
+      dsl += `        ${person.id} = person "${person.name}" "${person.description}"
+`
+    })
+
+    systems.forEach((system: any) => {
+      dsl += `        ${system.id} = softwareSystem "${system.name}" "${system.description}"
+`
+    })
+
+    if (containers.length > 0) {
+      dsl += `        
+        mainSystem = softwareSystem "${model.title}" {
+`
+      containers.forEach((container: any) => {
+        const tech = container.technology ? ` "${container.technology}"` : ""
+        dsl += `            ${container.id} = container "${container.name}"${tech} "${container.description}"
+`
+      })
+      dsl += `        }
+`
+    }
+
+    dsl += `
+`
+
+    model.relationships.forEach((rel: any) => {
+      dsl += `        ${rel.from} -> ${rel.to} "${rel.description}"
+`
+    })
+
+    dsl += `    }
+    
+    views {
+        systemContext mainSystem {
+            include *
+            autoLayout
+        }
+        
+        container mainSystem {
+            include *
+            autoLayout
+        }
+    }
+}`
+
+    return dsl
+  }
+
+  const getPlantUMLElementType = (type: string): string => {
+    const typeMap = {
+      person: "Person",
+      system: "System",
+      container: "Container",
+      component: "Component",
+    }
+    return typeMap[type as keyof typeof typeMap] || "Container"
+  }
+
+  const getMermaidShape = (type: string): string => {
+    const shapeMap = {
+      person: `["${type}"]`,
+      system: `[${type}]`,
+      container: `(${type})`,
+      component: `{${type}}`,
+    }
+    return shapeMap[type as keyof typeof shapeMap] || `[${type}]`
+  }
+
+  const generateAllLevelsMarkup = () => {
+    const multiModel = createMultiLevelAtlassianC4Model(selectedComponents, selectedIntegrations, config.title)
+    let allMarkup = ""
+
+    Object.entries(multiModel).forEach(([level, model]) => {
+      allMarkup += `\n\n// ========== ${level.toUpperCase()} DIAGRAM ==========\n\n`
+
+      const tempGenerator = {
+        generatePlantUML: () => generatePlantUMLForModel(model),
+        generateMermaid: () => generateMermaidForModel(model),
+        generateStructurizr: () => generateStructurizrForModel(model),
+      }
+
+      switch (exportFormat) {
+        case "plantuml":
+          allMarkup += tempGenerator.generatePlantUML()
+          break
+        case "mermaid":
+          allMarkup += tempGenerator.generateMermaid()
+          break
+        case "structurizr":
+          allMarkup += tempGenerator.generateStructurizr()
+          break
+        default:
+          allMarkup += tempGenerator.generatePlantUML()
+      }
+    })
+
+    return allMarkup
+  }
+
   const handleCopy = async () => {
-    const markup = generateC4Markup()
+    const markup = generateAllLevels ? generateAllLevelsMarkup() : generateC4Markup()
     await navigator.clipboard.writeText(markup)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
 
   const handleDownload = () => {
-    const markup = generateC4Markup()
+    const markup = generateAllLevels ? generateAllLevelsMarkup() : generateC4Markup()
     const extension = exportFormat === "plantuml" ? "puml" : exportFormat === "mermaid" ? "mmd" : "dsl"
-    const filename = `${config.title.toLowerCase().replace(/\s+/g, "-")}.${extension}`
+    const levelSuffix = generateAllLevels ? "-all-levels" : `-${selectedLevel}`
+    const filename = `${config.title.toLowerCase().replace(/\s+/g, "-")}${levelSuffix}.${extension}`
 
     const blob = new Blob([markup], { type: "text/plain" })
     const url = URL.createObjectURL(blob)
@@ -63,15 +272,12 @@ export function ExportPanel({ selectedComponents, selectedIntegrations, config }
   }
 
   const handleExportImage = () => {
-    // This would typically integrate with a service like PlantUML server or Mermaid live editor
-    const markup = generateC4Markup()
+    const markup = generateAllLevels ? generateAllLevelsMarkup() : generateC4Markup()
     const encodedMarkup = encodeURIComponent(markup)
 
     if (exportFormat === "plantuml") {
-      // Open PlantUML server in new tab
       window.open(`http://www.plantuml.com/plantuml/uml/${encodedMarkup}`, "_blank")
     } else if (exportFormat === "mermaid") {
-      // Open Mermaid live editor
       window.open(`https://mermaid.live/edit#pako:${btoa(markup)}`, "_blank")
     }
   }
@@ -96,6 +302,40 @@ export function ExportPanel({ selectedComponents, selectedIntegrations, config }
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+            <div className="flex items-center gap-2">
+              <Layers className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">Generate All C4 Levels</span>
+            </div>
+            <Button
+              variant={generateAllLevels ? "default" : "outline"}
+              size="sm"
+              onClick={() => setGenerateAllLevels(!generateAllLevels)}
+            >
+              {generateAllLevels ? "All Levels" : "Single Level"}
+            </Button>
+          </div>
+
+          {generateAllLevels && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Preview Level</label>
+              <Select
+                value={selectedLevel}
+                onValueChange={(value) => setSelectedLevel(value as keyof MultiLevelC4Model)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select level to preview" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="context">Level 1: System Context</SelectItem>
+                  <SelectItem value="container">Level 2: Container</SelectItem>
+                  <SelectItem value="component">Level 3: Component</SelectItem>
+                  <SelectItem value="code">Level 4: Code</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="space-y-2">
             <label className="text-sm font-medium">Export Format</label>
             <Select value={exportFormat} onValueChange={setExportFormat}>
@@ -156,6 +396,13 @@ export function ExportPanel({ selectedComponents, selectedIntegrations, config }
               <div className="space-y-4">
                 <div className="p-4 bg-muted rounded-lg">
                   <h4 className="font-medium mb-2">Architecture Summary</h4>
+                  {generateAllLevels && (
+                    <div className="mb-3">
+                      <Badge variant="outline" className="capitalize">
+                        Previewing: {selectedLevel} Level
+                      </Badge>
+                    </div>
+                  )}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="text-muted-foreground">Components ({selectedComponents.length}):</span>
@@ -207,8 +454,8 @@ export function ExportPanel({ selectedComponents, selectedIntegrations, config }
                     <div className="text-xs text-muted-foreground">Relationships</div>
                   </div>
                   <div className="p-3 bg-accent/5 rounded-lg">
-                    <div className="text-2xl font-bold text-accent capitalize">{config.level}</div>
-                    <div className="text-xs text-muted-foreground">C4 Level</div>
+                    <div className="text-2xl font-bold text-accent">{generateAllLevels ? "4" : "1"}</div>
+                    <div className="text-xs text-muted-foreground">C4 Levels</div>
                   </div>
                 </div>
               </div>
@@ -217,16 +464,19 @@ export function ExportPanel({ selectedComponents, selectedIntegrations, config }
             <TabsContent value="markup" className="mt-4">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <Badge variant="outline" className="capitalize">
-                    {exportFormat}
-                  </Badge>
+                  <div className="flex gap-2">
+                    <Badge variant="outline" className="capitalize">
+                      {exportFormat}
+                    </Badge>
+                    {generateAllLevels && <Badge variant="secondary">All Levels</Badge>}
+                  </div>
                   <Button variant="outline" size="sm" onClick={handleCopy}>
                     {copied ? <CheckCircle className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
                     {copied ? "Copied!" : "Copy"}
                   </Button>
                 </div>
                 <Textarea
-                  value={generateC4Markup()}
+                  value={generateAllLevels ? generateAllLevelsMarkup() : generateC4Markup()}
                   readOnly
                   className="font-mono text-sm min-h-64"
                   placeholder="Generated markup will appear here..."
@@ -258,6 +508,9 @@ export function ExportPanel({ selectedComponents, selectedIntegrations, config }
                     <li>• Choose Mermaid for GitHub README files and web integration</li>
                     <li>• Select Structurizr DSL for comprehensive architecture modeling</li>
                     <li>• Click "Render Image" to visualize your diagram online</li>
+                    {generateAllLevels && (
+                      <li>• "All Levels" generates Context, Container, Component, and Code diagrams</li>
+                    )}
                   </ul>
                 </div>
               </div>
@@ -269,7 +522,6 @@ export function ExportPanel({ selectedComponents, selectedIntegrations, config }
   )
 }
 
-// Helper functions (reused from previous components)
 function getComponentData(id: string) {
   const components: Record<string, { id: string; name: string; description: string; color: string }> = {
     "jira-software": {

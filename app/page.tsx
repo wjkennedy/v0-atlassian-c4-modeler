@@ -10,6 +10,7 @@ import { IntegrationPanel } from "@/components/integration-panel"
 import { DiagramPreview } from "@/components/diagram-preview"
 import { ConfigurationPanel } from "@/components/configuration-panel"
 import { ExportPanel } from "@/components/export-panel"
+import { SettingsModal } from "@/components/settings-modal"
 import { Building2, Network, Settings, Download, Eye, Layers } from "lucide-react"
 
 export default function C4GeneratorPage() {
@@ -20,6 +21,17 @@ export default function C4GeneratorPage() {
     level: "container",
     theme: "professional",
   })
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [customComponents, setCustomComponents] = useState<any[]>([])
+  const [customIntegrations, setCustomIntegrations] = useState<any[]>([])
+
+  const handleCustomComponentsUpdate = (components: any[]) => {
+    setCustomComponents(components)
+  }
+
+  const handleCustomIntegrationsUpdate = (integrations: any[]) => {
+    setCustomIntegrations(integrations)
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -40,7 +52,7 @@ export default function C4GeneratorPage() {
               <Badge variant="secondary" className="bg-secondary/10 text-secondary-foreground">
                 Enterprise Ready
               </Badge>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => setSettingsOpen(true)}>
                 <Settings className="h-4 w-4 mr-2" />
                 Settings
               </Button>
@@ -89,6 +101,7 @@ export default function C4GeneratorPage() {
                     <ComponentSelection
                       selectedComponents={selectedComponents}
                       onSelectionChange={setSelectedComponents}
+                      customComponents={customComponents}
                     />
                   </TabsContent>
 
@@ -96,6 +109,7 @@ export default function C4GeneratorPage() {
                     <IntegrationPanel
                       selectedIntegrations={selectedIntegrations}
                       onSelectionChange={setSelectedIntegrations}
+                      customIntegrations={customIntegrations}
                     />
                   </TabsContent>
 
@@ -154,11 +168,30 @@ export default function C4GeneratorPage() {
                     {diagramConfig.level}
                   </Badge>
                 </div>
+                {customComponents.length > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Custom Components</span>
+                    <Badge variant="outline">{customComponents.length}</Badge>
+                  </div>
+                )}
+                {customIntegrations.length > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Custom Integrations</span>
+                    <Badge variant="outline">{customIntegrations.length}</Badge>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
         </div>
       </main>
+
+      <SettingsModal
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        onComponentsUpdate={handleCustomComponentsUpdate}
+        onIntegrationsUpdate={handleCustomIntegrationsUpdate}
+      />
     </div>
   )
 }

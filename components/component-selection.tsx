@@ -19,11 +19,16 @@ import {
   Zap,
   Building,
   Workflow,
+  Brain,
+  Smartphone,
+  Calendar,
+  Target,
 } from "lucide-react"
 
 interface ComponentSelectionProps {
   selectedComponents: string[]
   onSelectionChange: (components: string[]) => void
+  customComponents?: any[]
 }
 
 const atlassianComponents = [
@@ -172,6 +177,38 @@ const atlassianComponents = [
     color: "bg-indigo-600",
   },
   {
+    id: "atlassian-intelligence",
+    name: "Atlassian Intelligence",
+    description: "AI-powered features across Atlassian products",
+    category: "AI/ML",
+    icon: Brain,
+    color: "bg-violet-600",
+  },
+  {
+    id: "atlassian-mobile",
+    name: "Atlassian Mobile Apps",
+    description: "Mobile applications for iOS and Android",
+    category: "Mobile",
+    icon: Smartphone,
+    color: "bg-gray-600",
+  },
+  {
+    id: "team-calendars",
+    name: "Team Calendars",
+    description: "Team scheduling and calendar management",
+    category: "Productivity",
+    icon: Calendar,
+    color: "bg-blue-500",
+  },
+  {
+    id: "portfolio-for-jira",
+    name: "Portfolio for Jira",
+    description: "Advanced project portfolio management",
+    category: "Enterprise",
+    icon: Target,
+    color: "bg-green-600",
+  },
+  {
     id: "database-primary",
     name: "Primary Database",
     description: "Main application database",
@@ -189,10 +226,16 @@ const atlassianComponents = [
   },
 ]
 
-export function ComponentSelection({ selectedComponents, onSelectionChange }: ComponentSelectionProps) {
+export function ComponentSelection({
+  selectedComponents,
+  onSelectionChange,
+  customComponents = [],
+}: ComponentSelectionProps) {
   const [searchTerm, setSearchTerm] = useState("")
 
-  const filteredComponents = atlassianComponents.filter(
+  const allComponents = [...atlassianComponents, ...customComponents]
+
+  const filteredComponents = allComponents.filter(
     (component) =>
       component.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       component.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -261,6 +304,11 @@ export function ComponentSelection({ selectedComponents, onSelectionChange }: Co
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-sm">{component.name}</h4>
                         <p className="text-xs text-muted-foreground mt-1">{component.description}</p>
+                        {component.id.startsWith("custom-") && (
+                          <Badge variant="secondary" className="text-xs mt-1">
+                            Custom
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   )

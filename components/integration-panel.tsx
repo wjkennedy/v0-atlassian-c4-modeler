@@ -23,11 +23,17 @@ import {
   Monitor,
   Workflow,
   Brain,
+  CreditCard,
+  MessageCircle,
+  Video,
+  Headphones,
+  Target,
 } from "lucide-react"
 
 interface IntegrationPanelProps {
   selectedIntegrations: string[]
   onSelectionChange: (integrations: string[]) => void
+  customIntegrations?: any[]
 }
 
 const integrations = [
@@ -295,6 +301,110 @@ const integrations = [
     icon: Smartphone,
     color: "bg-green-600",
   },
+  {
+    id: "stripe",
+    name: "Stripe",
+    description: "Payment processing and financial services",
+    category: "Finance",
+    icon: CreditCard,
+    color: "bg-purple-600",
+  },
+  {
+    id: "paypal",
+    name: "PayPal",
+    description: "Digital payment platform",
+    category: "Finance",
+    icon: CreditCard,
+    color: "bg-blue-600",
+  },
+  {
+    id: "discord",
+    name: "Discord",
+    description: "Voice, video and text communication",
+    category: "Communication",
+    icon: MessageCircle,
+    color: "bg-indigo-600",
+  },
+  {
+    id: "twilio",
+    name: "Twilio",
+    description: "Cloud communications platform",
+    category: "Communication",
+    icon: Smartphone,
+    color: "bg-red-500",
+  },
+  {
+    id: "sendgrid",
+    name: "SendGrid",
+    description: "Email delivery and marketing platform",
+    category: "Communication",
+    icon: Mail,
+    color: "bg-blue-500",
+  },
+  {
+    id: "intercom",
+    name: "Intercom",
+    description: "Customer messaging and support platform",
+    category: "Support",
+    icon: MessageCircle,
+    color: "bg-blue-600",
+  },
+  {
+    id: "zendesk",
+    name: "Zendesk",
+    description: "Customer service and support platform",
+    category: "Support",
+    icon: Headphones,
+    color: "bg-green-600",
+  },
+  {
+    id: "freshdesk",
+    name: "Freshdesk",
+    description: "Customer support software",
+    category: "Support",
+    icon: Headphones,
+    color: "bg-orange-500",
+  },
+  {
+    id: "loom",
+    name: "Loom",
+    description: "Video messaging and screen recording",
+    category: "Communication",
+    icon: Video,
+    color: "bg-purple-500",
+  },
+  {
+    id: "notion",
+    name: "Notion",
+    description: "All-in-one workspace for notes and collaboration",
+    category: "Productivity",
+    icon: FileText,
+    color: "bg-gray-800",
+  },
+  {
+    id: "airtable",
+    name: "Airtable",
+    description: "Cloud collaboration service with database features",
+    category: "Productivity",
+    icon: Database,
+    color: "bg-yellow-500",
+  },
+  {
+    id: "monday",
+    name: "Monday.com",
+    description: "Work operating system and project management",
+    category: "Productivity",
+    icon: BarChart3,
+    color: "bg-purple-600",
+  },
+  {
+    id: "asana",
+    name: "Asana",
+    description: "Team collaboration and project management",
+    category: "Productivity",
+    icon: Target,
+    color: "bg-pink-500",
+  },
 ]
 
 const internalConcerns = [
@@ -362,13 +472,52 @@ const internalConcerns = [
     icon: Settings,
     color: "bg-teal-600",
   },
+  {
+    id: "api-gateway",
+    name: "API Gateway",
+    description: "Centralized API management and routing",
+    category: "Infrastructure",
+    icon: Server,
+    color: "bg-blue-600",
+  },
+  {
+    id: "message-queue",
+    name: "Message Queue",
+    description: "Asynchronous message processing system",
+    category: "Infrastructure",
+    icon: Workflow,
+    color: "bg-green-600",
+  },
+  {
+    id: "cache-layer",
+    name: "Cache Layer",
+    description: "Distributed caching for performance optimization",
+    category: "Infrastructure",
+    icon: Database,
+    color: "bg-red-600",
+  },
+  {
+    id: "search-engine",
+    name: "Search Engine",
+    description: "Full-text search and indexing service",
+    category: "Data",
+    icon: Search,
+    color: "bg-orange-600",
+  },
 ]
 
-export function IntegrationPanel({ selectedIntegrations, onSelectionChange }: IntegrationPanelProps) {
+export function IntegrationPanel({
+  selectedIntegrations,
+  onSelectionChange,
+  customIntegrations = [],
+}: IntegrationPanelProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [activeTab, setActiveTab] = useState<"external" | "internal">("external")
 
-  const currentIntegrations = activeTab === "external" ? integrations : internalConcerns
+  const allExternalIntegrations = [...integrations, ...customIntegrations.filter((i) => !i.isInternal)]
+  const allInternalConcerns = [...internalConcerns, ...customIntegrations.filter((i) => i.isInternal)]
+
+  const currentIntegrations = activeTab === "external" ? allExternalIntegrations : allInternalConcerns
 
   const filteredIntegrations = currentIntegrations.filter(
     (integration) =>
@@ -463,6 +612,11 @@ export function IntegrationPanel({ selectedIntegrations, onSelectionChange }: In
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-sm">{integration.name}</h4>
                         <p className="text-xs text-muted-foreground mt-1">{integration.description}</p>
+                        {integration.id.startsWith("custom-") && (
+                          <Badge variant="secondary" className="text-xs mt-1">
+                            Custom
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   )

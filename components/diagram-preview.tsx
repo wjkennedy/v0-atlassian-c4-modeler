@@ -33,6 +33,11 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [zoom, setZoom] = useState(1)
   const [nodes, setNodes] = useState<DiagramNode[]>([])
+  const [refreshKey, setRefreshKey] = useState(0) // Added refresh key for live preview updates
+
+  useEffect(() => {
+    setRefreshKey((prev) => prev + 1)
+  }, [components, integrations, config])
 
   // Generate diagram nodes based on selected components and integrations
   useEffect(() => {
@@ -75,6 +80,38 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
         }
       })
 
+      const hasCICD =
+        integrations.some((id) => ["jenkins", "github", "azure-devops", "circleci"].includes(id)) ||
+        components.includes("bitbucket")
+
+      if (hasCICD) {
+        newNodes.push({
+          id: "cicd_pipeline",
+          name: "CI/CD Pipeline",
+          type: "container",
+          description: "Automated build and deployment",
+          x: 550,
+          y: 300,
+          width: 180,
+          height: 100,
+          color: "#dc2626",
+          connections: ["artifact_repo"],
+        })
+
+        newNodes.push({
+          id: "artifact_repo",
+          name: "Artifact Repository",
+          type: "container",
+          description: "Build artifacts storage",
+          x: 750,
+          y: 300,
+          width: 180,
+          height: 100,
+          color: "#7c3aed",
+          connections: [],
+        })
+      }
+
       // Add integrations as external systems
       integrations.forEach((integrationId, index) => {
         const integrationData = getIntegrationData(integrationId)
@@ -98,7 +135,7 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
     }
 
     generateNodes()
-  }, [components, integrations])
+  }, [components, integrations, refreshKey]) // Added refreshKey dependency
 
   // Draw the diagram
   useEffect(() => {
@@ -259,9 +296,16 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
     return lines
   }
 
-  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.1, 2))
-  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.1, 0.5))
-  const handleReset = () => setZoom(1)
+  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.1, 3))
+  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.1, 0.3))
+  const handleReset = () => {
+    setZoom(1)
+    setRefreshKey((prev) => prev + 1) // Force refresh
+  }
+
+  const handleRefresh = () => {
+    setRefreshKey((prev) => prev + 1)
+  }
 
   return (
     <div className="space-y-4">
@@ -279,6 +323,9 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
           </Button>
           <Button variant="outline" size="sm" onClick={handleReset}>
             <RotateCcw className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleRefresh}>
+            Refresh
           </Button>
         </div>
         <Button variant="outline" size="sm">
@@ -302,7 +349,7 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
       {/* Legend */}
       <Card className="p-4">
         <h4 className="font-medium mb-3">Diagram Legend</h4>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-blue-500 rounded border-2 border-blue-500"></div>
             <span>Person/Actor</span>
@@ -318,6 +365,10 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 border-2 border-gray-400 bg-white"></div>
             <span>Integration</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-red-500 border-2 border-red-500"></div>
+            <span>CI/CD Pipeline</span>
           </div>
         </div>
       </Card>

@@ -68,6 +68,7 @@ export function ExportPanel({ selectedComponents, selectedIntegrations, config }
       container: "C4_Container.puml",
       component: "C4_Component.puml",
       code: "C4_Component.puml",
+      landscape: "C4_Landscape.puml",
     }
 
     let puml = `@startuml
@@ -202,6 +203,7 @@ graph TD
       system: "System",
       container: "Container",
       component: "Component",
+      landscape: "System",
     }
     return typeMap[type as keyof typeof typeMap] || "Container"
   }
@@ -212,6 +214,7 @@ graph TD
       system: `[${type}]`,
       container: `(${type})`,
       component: `{${type}}`,
+      landscape: `[${type}]`,
     }
     return shapeMap[type as keyof typeof shapeMap] || `[${type}]`
   }
@@ -327,6 +330,7 @@ graph TD
                   <SelectValue placeholder="Select level to preview" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="landscape">Level 0: System Landscape</SelectItem>
                   <SelectItem value="context">Level 1: System Context</SelectItem>
                   <SelectItem value="container">Level 2: Container</SelectItem>
                   <SelectItem value="component">Level 3: Component</SelectItem>

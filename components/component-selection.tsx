@@ -16,6 +16,7 @@ import {
   GitBranch,
   MessageSquare,
   BarChart3,
+  Zap,
 } from "lucide-react"
 
 interface ComponentSelectionProps {
@@ -39,6 +40,14 @@ const atlassianComponents = [
     category: "Core Products",
     icon: Shield,
     color: "bg-green-500",
+  },
+  {
+    id: "jira-work-management",
+    name: "Jira Work Management",
+    description: "Business team project management",
+    category: "Core Products",
+    icon: Server,
+    color: "bg-blue-600",
   },
   {
     id: "confluence",
@@ -71,6 +80,30 @@ const atlassianComponents = [
     category: "Platform",
     icon: Users,
     color: "bg-pink-500",
+  },
+  {
+    id: "jira-align",
+    name: "Jira Align",
+    description: "Enterprise agile planning",
+    category: "Enterprise",
+    icon: BarChart3,
+    color: "bg-emerald-500",
+  },
+  {
+    id: "bamboo",
+    name: "Bamboo",
+    description: "Continuous integration and deployment",
+    category: "DevOps",
+    icon: Zap,
+    color: "bg-yellow-500",
+  },
+  {
+    id: "crowd",
+    name: "Crowd",
+    description: "Identity management and single sign-on",
+    category: "Security",
+    icon: Shield,
+    color: "bg-teal-500",
   },
   {
     id: "statuspage",

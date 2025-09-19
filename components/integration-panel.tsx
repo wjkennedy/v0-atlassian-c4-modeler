@@ -5,7 +5,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Search, Zap, Shield, Database, Cloud, Users, Mail, FileText, BarChart3, Settings, Lock } from "lucide-react"
+import {
+  Search,
+  Zap,
+  Shield,
+  Database,
+  Cloud,
+  Users,
+  Mail,
+  FileText,
+  BarChart3,
+  Settings,
+  Lock,
+  GitBranch,
+  Server,
+} from "lucide-react"
 
 interface IntegrationPanelProps {
   selectedIntegrations: string[]
@@ -38,6 +52,22 @@ const integrations = [
     color: "bg-gray-800",
   },
   {
+    id: "github-enterprise",
+    name: "GitHub Enterprise",
+    description: "Enterprise code repository and collaboration",
+    category: "DevOps",
+    icon: FileText,
+    color: "bg-gray-900",
+  },
+  {
+    id: "gitlab",
+    name: "GitLab",
+    description: "DevOps platform with integrated CI/CD",
+    category: "DevOps",
+    icon: GitBranch,
+    color: "bg-orange-600",
+  },
+  {
     id: "okta",
     name: "Okta",
     description: "Identity and access management",
@@ -52,6 +82,14 @@ const integrations = [
     category: "Security",
     icon: Lock,
     color: "bg-blue-700",
+  },
+  {
+    id: "google-workspace",
+    name: "Google Workspace",
+    description: "Google productivity and collaboration tools",
+    category: "Productivity",
+    icon: Mail,
+    color: "bg-red-500",
   },
   {
     id: "slack",
@@ -70,6 +108,14 @@ const integrations = [
     color: "bg-indigo-600",
   },
   {
+    id: "zoom",
+    name: "Zoom",
+    description: "Video conferencing and communication",
+    category: "Communication",
+    icon: Users,
+    color: "bg-blue-400",
+  },
+  {
     id: "tableau",
     name: "Tableau",
     description: "Business intelligence and analytics",
@@ -86,12 +132,36 @@ const integrations = [
     color: "bg-yellow-600",
   },
   {
+    id: "looker",
+    name: "Looker",
+    description: "Business intelligence and data platform",
+    category: "Analytics",
+    icon: BarChart3,
+    color: "bg-green-500",
+  },
+  {
     id: "jenkins",
     name: "Jenkins",
     description: "Continuous integration and deployment",
     category: "DevOps",
     icon: Zap,
     color: "bg-red-600",
+  },
+  {
+    id: "azure-devops",
+    name: "Azure DevOps",
+    description: "Microsoft DevOps platform",
+    category: "DevOps",
+    icon: Zap,
+    color: "bg-blue-600",
+  },
+  {
+    id: "circleci",
+    name: "CircleCI",
+    description: "Continuous integration and delivery",
+    category: "DevOps",
+    icon: Zap,
+    color: "bg-green-600",
   },
   {
     id: "aws",
@@ -108,6 +178,30 @@ const integrations = [
     category: "Infrastructure",
     icon: Cloud,
     color: "bg-blue-600",
+  },
+  {
+    id: "google-cloud",
+    name: "Google Cloud Platform",
+    description: "Google cloud infrastructure and services",
+    category: "Infrastructure",
+    icon: Cloud,
+    color: "bg-red-600",
+  },
+  {
+    id: "docker",
+    name: "Docker",
+    description: "Containerization platform",
+    category: "Infrastructure",
+    icon: Server,
+    color: "bg-blue-500",
+  },
+  {
+    id: "kubernetes",
+    name: "Kubernetes",
+    description: "Container orchestration platform",
+    category: "Infrastructure",
+    icon: Server,
+    color: "bg-indigo-600",
   },
 ]
 

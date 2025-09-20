@@ -148,6 +148,66 @@ const defaultPluginComponents: PluginComponent[] = [
     businessFunction: "Business Intelligence",
     integrationPoints: ["Dashboard", "REST API", "Custom Fields"],
   },
+  {
+    id: "github",
+    name: "GitHub for Jira",
+    description: "Connect your GitHub repositories to Jira for seamless development workflow",
+    category: "Development & CI/CD",
+    technology: "Git Integration",
+    vendor: "GitHub",
+    isPopular: true,
+    atlassianProducts: ["Jira Software"],
+    businessFunction: "Development Workflow",
+    integrationPoints: ["Issue Management", "Workflow", "REST API"],
+  },
+  {
+    id: "figma",
+    name: "Figma for Jira",
+    description: "Embed Figma designs directly in Jira issues for better design collaboration",
+    category: "Visualization",
+    technology: "Design Integration",
+    vendor: "Figma",
+    isPopular: true,
+    atlassianProducts: ["Jira Software"],
+    businessFunction: "Design Collaboration",
+    integrationPoints: ["Issue Management", "Custom Fields"],
+  },
+  {
+    id: "gitlab",
+    name: "GitLab for Jira",
+    description: "Integrate GitLab repositories with Jira for complete DevOps visibility",
+    category: "Development & CI/CD",
+    technology: "Git Integration",
+    vendor: "GitLab",
+    isPopular: true,
+    atlassianProducts: ["Jira Software"],
+    businessFunction: "DevOps Integration",
+    integrationPoints: ["Issue Management", "Workflow", "REST API"],
+  },
+  {
+    id: "zephyr",
+    name: "Zephyr Scale",
+    description: "Enterprise test management solution for Jira",
+    category: "Testing & QA",
+    technology: "Test Management",
+    vendor: "SmartBear",
+    isPopular: true,
+    atlassianProducts: ["Jira Software"],
+    businessFunction: "Quality Assurance",
+    integrationPoints: ["Issue Management", "Workflow", "Dashboard"],
+  },
+  {
+    id: "teams",
+    name: "Microsoft Teams for Jira",
+    description: "Collaborate on Jira issues directly from Microsoft Teams",
+    category: "Communication",
+    technology: "Chat Integration",
+    vendor: "Microsoft",
+    isPopular: true,
+    atlassianProducts: ["Jira Software", "Jira Service Management"],
+    businessFunction: "Team Collaboration",
+    integrationPoints: ["Issue Management", "Webhooks"],
+  },
 ]
 
 export function PluginAsComponents({
@@ -180,6 +240,25 @@ export function PluginAsComponents({
     const updatedCustomComponents = [...existingNonPlugins, ...pluginAsCustomComponents]
     onCustomComponentsChange(updatedCustomComponents)
   }, [pluginComponents])
+
+  useEffect(() => {
+    const loadPluginsFromFile = async () => {
+      try {
+        const response = await fetch("/data/atlassian-plugins.json")
+        if (response.ok) {
+          const plugins = await response.json()
+          if (Array.isArray(plugins) && plugins.length > 0) {
+            console.log("[v0] Loaded plugins from JSON file:", plugins.length)
+            setPluginComponents(plugins)
+          }
+        }
+      } catch (error) {
+        console.log("[v0] Failed to load plugins from JSON, using defaults:", error)
+      }
+    }
+
+    loadPluginsFromFile()
+  }, [])
 
   const filteredPlugins = pluginComponents.filter((plugin) => {
     const matchesSearch =
@@ -241,14 +320,24 @@ export function PluginAsComponents({
         try {
           const importedPlugins = JSON.parse(e.target?.result as string)
           if (Array.isArray(importedPlugins)) {
-            setPluginComponents(importedPlugins)
+            // Validate plugin structure
+            const validPlugins = importedPlugins.filter(
+              (plugin) => plugin.id && plugin.name && plugin.description && plugin.category,
+            )
+            console.log("[v0] Imported plugins:", validPlugins.length)
+            setPluginComponents(validPlugins)
+          } else {
+            console.error("[v0] Invalid plugin data format - expected array")
           }
         } catch (error) {
           console.error("[v0] Failed to import plugins:", error)
+          alert("Failed to import plugins. Please check the file format.")
         }
       }
       reader.readAsText(file)
     }
+    // Reset the input
+    event.target.value = ""
   }
 
   return (

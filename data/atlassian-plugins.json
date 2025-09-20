@@ -1,0 +1,62 @@
+[
+  {
+    "id": "scriptrunner",
+    "name": "ScriptRunner for Jira",
+    "description": "Automation and customization toolkit for Jira administrators",
+    "category": "Workflow & Automation",
+    "technology": "Groovy Scripts",
+    "vendor": "Adaptavist",
+    "isPopular": true,
+    "atlassianProducts": ["Jira Software", "Jira Service Management"],
+    "businessFunction": "Process Optimization",
+    "integrationPoints": ["Workflow", "Custom Fields", "Automation", "JQL"]
+  },
+  {
+    "id": "xray",
+    "name": "Xray Test Management",
+    "description": "Native test management solution for Jira",
+    "category": "Testing & QA",
+    "technology": "Test Management",
+    "vendor": "Xpand IT",
+    "isPopular": true,
+    "atlassianProducts": ["Jira Software"],
+    "businessFunction": "Quality Assurance",
+    "integrationPoints": ["Issue Management", "Workflow", "Dashboard"]
+  },
+  {
+    "id": "tempo",
+    "name": "Tempo Timesheets",
+    "description": "AI-powered time tracking and project management",
+    "category": "Time Tracking",
+    "technology": "Time Tracking",
+    "vendor": "Tempo",
+    "isPopular": true,
+    "atlassianProducts": ["Jira Software", "Jira Service Management"],
+    "businessFunction": "Resource Management",
+    "integrationPoints": ["Custom Fields", "Dashboard", "REST API"]
+  },
+  {
+    "id": "structure",
+    "name": "Structure by Tempo",
+    "description": "Portfolio and project management for Jira",
+    "category": "Project Management",
+    "technology": "Portfolio Management",
+    "vendor": "Tempo",
+    "isPopular": true,
+    "atlassianProducts": ["Jira Software"],
+    "businessFunction": "Project Delivery",
+    "integrationPoints": ["Project Management", "Dashboard", "JQL"]
+  },
+  {
+    "id": "eazybi",
+    "name": "eazyBI Reports",
+    "description": "Advanced reporting and analytics for Jira",
+    "category": "Reporting & Analytics",
+    "technology": "Business Intelligence",
+    "vendor": "eazyBI",
+    "isPopular": true,
+    "atlassianProducts": ["Jira Software", "Jira Service Management"],
+    "businessFunction": "Business Intelligence",
+    "integrationPoints": ["Dashboard", "REST API", "Custom Fields"]
+  }
+]

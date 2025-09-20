@@ -165,9 +165,9 @@ title ${model.title} - ${levelTitles[model.level as keyof typeof levelTitles]} D
   }
 
   const encodePlantUML = (plantuml: string): string => {
-    // Simple base64 encoding for PlantUML server
-    const encoded = btoa(unescape(encodeURIComponent(plantuml)))
-    return encoded
+    // The PlantUML server supports both compressed and plain text formats
+    // Using plain text format eliminates encoding issues
+    return "~1" + encodeURIComponent(plantuml)
   }
 
   const handleRefresh = () => {

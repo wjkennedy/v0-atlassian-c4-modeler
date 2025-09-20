@@ -71,7 +71,12 @@ export class C4ModelGenerator {
     }
 
     let puml = `@startuml
-!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/${includeMap[this.model.level]}
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
 
 title ${this.model.title.replace(/[^\w\s-]/g, "")} - ${this.model.level.charAt(0).toUpperCase() + this.model.level.slice(1)} Diagram
 ${this.model.description ? `\n!define DESCRIPTION ${this.model.description.replace(/[^\w\s-]/g, "")}` : ""}

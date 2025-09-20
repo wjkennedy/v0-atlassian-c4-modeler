@@ -3,9 +3,8 @@
 import { useEffect, useRef, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ZoomIn, ZoomOut, RotateCcw, Maximize2, RefreshCw } from "lucide-react"
+import { RefreshCw, Download } from "lucide-react"
 import { createMultiLevelAtlassianC4Model, type MultiLevelC4Model } from "@/lib/c4-generator"
 
 interface DiagramPreviewProps {
@@ -20,11 +19,11 @@ interface DiagramPreviewProps {
 
 export function DiagramPreview({ components, integrations, config }: DiagramPreviewProps) {
   const mermaidRef = useRef<HTMLDivElement>(null)
-  const [zoom, setZoom] = useState(1)
   const [refreshKey, setRefreshKey] = useState(0)
   const [selectedLevel, setSelectedLevel] = useState<keyof MultiLevelC4Model>("context")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
 
   useEffect(() => {
     setRefreshKey((prev) => prev + 1)
@@ -89,15 +88,6 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
 
         if (mermaidRef.current) {
           mermaidRef.current.innerHTML = svg
-
-          // Apply zoom to the SVG
-          const svgElement = mermaidRef.current.querySelector("svg")
-          if (svgElement) {
-            svgElement.style.transform = `scale(${zoom})`
-            svgElement.style.transformOrigin = "top left"
-            svgElement.style.width = `${100 / zoom}%`
-            svgElement.style.height = `${100 / zoom}%`
-          }
         }
       } catch (err) {
         console.error("[v0] Mermaid rendering error:", err)
@@ -121,7 +111,7 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
     }
 
     renderDiagram()
-  }, [components, integrations, config, selectedLevel, refreshKey, zoom, error])
+  }, [components, integrations, config, selectedLevel, refreshKey, error])
 
   const generateMermaidC4Diagram = (model: any): string => {
     const levelTitles = {
@@ -148,19 +138,24 @@ C4${model.level.charAt(0).toUpperCase() + model.level.slice(1)}
 
       switch (element.type) {
         case "person":
-          mermaid += `    Person(${cleanId}, "${cleanName}", "${cleanDesc}")\n`
+          mermaid += `    Person(${cleanId}, "${cleanName}", "${cleanDesc}")
+`
           break
         case "system":
-          mermaid += `    System(${cleanId}, "${cleanName}", "${cleanDesc}"${tech})\n`
+          mermaid += `    System(${cleanId}, "${cleanName}", "${cleanDesc}"${tech})
+`
           break
         case "container":
-          mermaid += `    Container(${cleanId}, "${cleanName}", "${cleanDesc}"${tech})\n`
+          mermaid += `    Container(${cleanId}, "${cleanName}", "${cleanDesc}"${tech})
+`
           break
         case "component":
-          mermaid += `    Component(${cleanId}, "${cleanName}", "${cleanDesc}"${tech})\n`
+          mermaid += `    Component(${cleanId}, "${cleanName}", "${cleanDesc}"${tech})
+`
           break
         default:
-          mermaid += `    System(${cleanId}, "${cleanName}", "${cleanDesc}"${tech})\n`
+          mermaid += `    System(${cleanId}, "${cleanName}", "${cleanDesc}"${tech})
+`
       }
     })
 
@@ -173,21 +168,70 @@ C4${model.level.charAt(0).toUpperCase() + model.level.slice(1)}
       const cleanDesc = rel.description.replace(/"/g, '\\"')
       const tech = rel.technology ? `, "${rel.technology.replace(/"/g, '\\"')}"` : ""
 
-      mermaid += `    Rel(${cleanFrom}, ${cleanTo}, "${cleanDesc}"${tech})\n`
+      mermaid += `    Rel(${cleanFrom}, ${cleanTo}, "${cleanDesc}"${tech})
+`
     })
 
     return mermaid
   }
 
-  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.1, 3))
-  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.1, 0.3))
-  const handleReset = () => {
-    setZoom(1)
+  const handleRefresh = () => {
     setRefreshKey((prev) => prev + 1)
   }
 
-  const handleRefresh = () => {
-    setRefreshKey((prev) => prev + 1)
+  const handleDownloadPDF = async () => {
+    if (!mermaidRef.current) return
+
+    setIsGeneratingPDF(true)
+    try {
+      // Dynamically import the PDF generation libraries
+      const html2canvas = (await import("html2canvas")).default
+      const jsPDF = (await import("jspdf")).jsPDF
+
+      // Get the diagram container
+      const diagramElement = mermaidRef.current
+      const svgElement = diagramElement.querySelector("svg")
+
+      if (!svgElement) {
+        throw new Error("No diagram found to export")
+      }
+
+      // Capture the diagram as canvas
+      const canvas = await html2canvas(diagramElement, {
+        backgroundColor: "#ffffff",
+        scale: 2, // Higher resolution
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+      })
+
+      // Create PDF
+      const imgData = canvas.toDataURL("image/png")
+      const pdf = new jsPDF({
+        orientation: canvas.width > canvas.height ? "landscape" : "portrait",
+        unit: "px",
+        format: [canvas.width, canvas.height],
+      })
+
+      pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height)
+
+      // Generate filename
+      const levelTitles = {
+        landscape: "System-Landscape",
+        context: "System-Context",
+        container: "Container",
+        component: "Component",
+        code: "Code",
+      }
+
+      const filename = `${config.title.toLowerCase().replace(/\s+/g, "-")}-${levelTitles[selectedLevel]}-diagram.pdf`
+      pdf.save(filename)
+    } catch (error) {
+      console.error("[v0] PDF generation error:", error)
+      alert("Failed to generate PDF. Please try again.")
+    } finally {
+      setIsGeneratingPDF(false)
+    }
   }
 
   return (
@@ -208,25 +252,19 @@ C4${model.level.charAt(0).toUpperCase() + model.level.slice(1)}
             </SelectContent>
           </Select>
 
-          <Button variant="outline" size="sm" onClick={handleZoomOut} disabled={isLoading}>
-            <ZoomOut className="h-4 w-4" />
-          </Button>
-          <Badge variant="outline" className="px-3">
-            {Math.round(zoom * 100)}%
-          </Badge>
-          <Button variant="outline" size="sm" onClick={handleZoomIn} disabled={isLoading}>
-            <ZoomIn className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleReset} disabled={isLoading}>
-            <RotateCcw className="h-4 w-4" />
-          </Button>
           <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
             <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadPDF}
+            disabled={isLoading || isGeneratingPDF || components.length === 0}
+          >
+            <Download className={`h-4 w-4 ${isGeneratingPDF ? "animate-pulse" : ""}`} />
+            {isGeneratingPDF ? "Generating..." : "PDF"}
+          </Button>
         </div>
-        <Button variant="outline" size="sm">
-          <Maximize2 className="h-4 w-4" />
-        </Button>
       </div>
 
       {/* Diagram Canvas */}

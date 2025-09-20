@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Download, Copy, FileText, ImageIcon, Share2, CheckCircle, Layers } from "lucide-react"
+import { Download, Copy, FileText, ImageIcon, Share2, CheckCircle, Layers, FileDown } from "lucide-react"
 import { createAtlassianC4Model, createMultiLevelAtlassianC4Model, type MultiLevelC4Model } from "@/lib/c4-generator"
 
 interface ExportPanelProps {
@@ -25,6 +25,7 @@ export function ExportPanel({ selectedComponents, selectedIntegrations, config }
   const [copied, setCopied] = useState(false)
   const [generateAllLevels, setGenerateAllLevels] = useState(false)
   const [selectedLevel, setSelectedLevel] = useState<keyof MultiLevelC4Model>("context")
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
 
   const generateC4Markup = () => {
     if (generateAllLevels) {
@@ -336,6 +337,106 @@ graph TD
     }
   }
 
+  const handleExportPDF = async () => {
+    if (selectedComponents.length === 0) return
+
+    setIsGeneratingPDF(true)
+    try {
+      // Dynamically import the PDF generation libraries
+      const html2canvas = (await import("html2canvas")).default
+      const jsPDF = (await import("jspdf")).jsPDF
+
+      // Generate the diagram markup
+      const markup = generateAllLevels ? generateAllLevelsMarkup() : generateC4Markup()
+
+      if (exportFormat === "mermaid") {
+        // Create a temporary container for rendering
+        const tempContainer = document.createElement("div")
+        tempContainer.style.position = "absolute"
+        tempContainer.style.left = "-9999px"
+        tempContainer.style.top = "-9999px"
+        tempContainer.style.width = "1200px"
+        tempContainer.style.backgroundColor = "#ffffff"
+        tempContainer.style.padding = "20px"
+        document.body.appendChild(tempContainer)
+
+        try {
+          // Use Mermaid to render the diagram
+          const mermaid = (await import("mermaid")).default
+
+          mermaid.initialize({
+            startOnLoad: false,
+            theme: "base",
+            themeVariables: {
+              primaryColor: "#0052cc",
+              primaryTextColor: "#ffffff",
+              primaryBorderColor: "#0052cc",
+              lineColor: "#6b7280",
+            },
+          })
+
+          const diagramId = `pdf-export-${Date.now()}`
+          const { svg } = await mermaid.render(diagramId, markup)
+
+          tempContainer.innerHTML = svg
+
+          // Capture as canvas
+          const canvas = await html2canvas(tempContainer, {
+            backgroundColor: "#ffffff",
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            logging: false,
+          })
+
+          // Create PDF
+          const imgData = canvas.toDataURL("image/png")
+          const pdf = new jsPDF({
+            orientation: canvas.width > canvas.height ? "landscape" : "portrait",
+            unit: "px",
+            format: [canvas.width, canvas.height],
+          })
+
+          pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height)
+
+          const levelSuffix = generateAllLevels ? "-all-levels" : `-${selectedLevel}`
+          const filename = `${config.title.toLowerCase().replace(/\s+/g, "-")}${levelSuffix}-diagram.pdf`
+          pdf.save(filename)
+        } finally {
+          document.body.removeChild(tempContainer)
+        }
+      } else {
+        // For non-Mermaid formats, create a text-based PDF
+        const pdf = new jsPDF()
+        const lines = markup.split("\n")
+        let yPosition = 20
+
+        pdf.setFontSize(16)
+        pdf.text(`${config.title} - C4 Model`, 20, yPosition)
+        yPosition += 20
+
+        pdf.setFontSize(10)
+        lines.forEach((line) => {
+          if (yPosition > 280) {
+            pdf.addPage()
+            yPosition = 20
+          }
+          pdf.text(line, 20, yPosition)
+          yPosition += 5
+        })
+
+        const levelSuffix = generateAllLevels ? "-all-levels" : `-${selectedLevel}`
+        const filename = `${config.title.toLowerCase().replace(/\s+/g, "-")}${levelSuffix}-markup.pdf`
+        pdf.save(filename)
+      }
+    } catch (error) {
+      console.error("[v0] PDF export error:", error)
+      alert("Failed to export PDF. Please try again.")
+    } finally {
+      setIsGeneratingPDF(false)
+    }
+  }
+
   const getFormatDescription = () => {
     const descriptions = {
       plantuml: "Industry-standard C4 model notation with PlantUML. Best for documentation and presentations.",
@@ -431,6 +532,16 @@ graph TD
               {copied ? "Copied!" : "Copy"}
             </Button>
           </div>
+
+          <Button
+            onClick={handleExportPDF}
+            className="w-full"
+            variant="secondary"
+            disabled={selectedComponents.length === 0 || isGeneratingPDF}
+          >
+            <FileDown className={`h-4 w-4 mr-2 ${isGeneratingPDF ? "animate-pulse" : ""}`} />
+            {isGeneratingPDF ? "Generating PDF..." : "Export as PDF"}
+          </Button>
         </CardContent>
       </Card>
 
@@ -541,7 +652,7 @@ graph TD
 
             <TabsContent value="export" className="mt-4">
               <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <Button variant="outline" className="h-20 flex-col bg-transparent" onClick={handleExportImage}>
                     <ImageIcon className="h-6 w-6 mb-2" />
                     <span className="text-sm">{exportFormat === "mermaid" ? "Download SVG" : "Download File"}</span>
@@ -554,6 +665,15 @@ graph TD
                     <Share2 className="h-6 w-6 mb-2" />
                     <span className="text-sm">Copy to Clipboard</span>
                   </Button>
+                  <Button
+                    variant="outline"
+                    className="h-20 flex-col bg-transparent"
+                    onClick={handleExportPDF}
+                    disabled={selectedComponents.length === 0 || isGeneratingPDF}
+                  >
+                    <FileDown className={`h-6 w-6 mb-2 ${isGeneratingPDF ? "animate-pulse" : ""}`} />
+                    <span className="text-sm">{isGeneratingPDF ? "Generating..." : "Export PDF"}</span>
+                  </Button>
                 </div>
 
                 <div className="p-4 bg-muted rounded-lg">
@@ -563,6 +683,7 @@ graph TD
                     <li>• Choose Mermaid for GitHub README files and local rendering</li>
                     <li>• Select Structurizr DSL for comprehensive architecture modeling</li>
                     <li>• Mermaid diagrams render locally and can be exported as SVG images</li>
+                    <li>• Export as PDF to get a high-quality document with embedded diagrams</li>
                     {generateAllLevels && (
                       <li>• "All Levels" generates Landscape, Context, Container, Component, and Code diagrams</li>
                     )}

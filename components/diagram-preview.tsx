@@ -18,12 +18,13 @@ interface DiagramPreviewProps {
 }
 
 export function DiagramPreview({ components, integrations, config }: DiagramPreviewProps) {
-  const mermaidRef = useRef<HTMLDivElement>(null)
+  const diagramRef = useRef<HTMLDivElement>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [selectedLevel, setSelectedLevel] = useState<keyof MultiLevelC4Model>("context")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
+  const [currentModel, setCurrentModel] = useState<any>(null)
 
   useEffect(() => {
     setRefreshKey((prev) => prev + 1)
@@ -31,71 +32,52 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
 
   useEffect(() => {
     const renderDiagram = async () => {
-      if (!mermaidRef.current || components.length === 0) return
+      if (!diagramRef.current || components.length === 0) return
 
       setIsLoading(true)
       setError(null)
 
       try {
-        // Dynamically import Mermaid
-        const mermaid = (await import("mermaid")).default
-
-        // Initialize Mermaid with C4 theme
-        mermaid.initialize({
-          startOnLoad: false,
-          theme: "base",
-          themeVariables: {
-            primaryColor: "#0052cc",
-            primaryTextColor: "#ffffff",
-            primaryBorderColor: "#0052cc",
-            lineColor: "#6b7280",
-            sectionBkgColor: "#f8fafc",
-            altSectionBkgColor: "#f1f5f9",
-            gridColor: "#e2e8f0",
-            c4PersonBkg: "#08427b",
-            c4PersonBorder: "#073b6f",
-            c4SystemBkg: "#1168bd",
-            c4SystemBorder: "#0b4884",
-            c4ContainerBkg: "#438dd5",
-            c4ContainerBorder: "#2563eb",
-            c4ComponentBkg: "#85bbf0",
-            c4ComponentBorder: "#3b82f6",
-          },
-          c4: {
-            personFontSize: 14,
-            personFontFamily: "Arial",
-            personFontWeight: "normal",
-            systemFontSize: 14,
-            systemFontFamily: "Arial",
-            systemFontWeight: "normal",
-          },
-        })
-
         // Generate the multi-level model
         const multiModel = createMultiLevelAtlassianC4Model(components, integrations, config.title)
         const selectedModel = multiModel[selectedLevel]
 
-        const mermaidSyntax = generateMermaidC4Diagram(selectedModel)
+        setCurrentModel(selectedModel)
+
+        const plantumlSyntax = generatePlantUMLDiagram(selectedModel)
+
+        const encodedUML = encodePlantUML(plantumlSyntax)
+        const imageUrl = `https://www.plantuml.com/plantuml/svg/${encodedUML}`
 
         // Clear previous content
-        mermaidRef.current.innerHTML = ""
+        diagramRef.current.innerHTML = ""
 
-        // Create a unique ID for this diagram
-        const diagramId = `mermaid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        // Create image element
+        const img = document.createElement("img")
+        img.src = imageUrl
+        img.alt = `${selectedModel.title} - ${selectedLevel} diagram`
+        img.style.maxWidth = "100%"
+        img.style.height = "auto"
+        img.style.display = "block"
+        img.style.margin = "0 auto"
 
-        // Render the diagram
-        const { svg } = await mermaid.render(diagramId, mermaidSyntax)
-
-        if (mermaidRef.current) {
-          mermaidRef.current.innerHTML = svg
+        img.onload = () => {
+          setIsLoading(false)
         }
+
+        img.onerror = () => {
+          setError("Failed to render PlantUML diagram")
+          setIsLoading(false)
+        }
+
+        diagramRef.current.appendChild(img)
       } catch (err) {
-        console.error("[v0] Mermaid rendering error:", err)
+        console.error("[v0] PlantUML rendering error:", err)
         setError(err instanceof Error ? err.message : "Failed to render diagram")
 
         // Fallback to simple text representation
-        if (mermaidRef.current) {
-          mermaidRef.current.innerHTML = `
+        if (diagramRef.current) {
+          diagramRef.current.innerHTML = `
             <div class="p-8 text-center text-gray-500">
               <p class="mb-2">Diagram rendering failed</p>
               <p class="text-sm">${error || "Unknown error"}</p>
@@ -105,7 +87,6 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
             </div>
           `
         }
-      } finally {
         setIsLoading(false)
       }
     }
@@ -113,7 +94,7 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
     renderDiagram()
   }, [components, integrations, config, selectedLevel, refreshKey, error])
 
-  const generateMermaidC4Diagram = (model: any): string => {
+  const generatePlantUMLDiagram = (model: any): string => {
     const levelTitles = {
       landscape: "System Landscape",
       context: "System Context",
@@ -122,10 +103,16 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
       code: "Code",
     }
 
-    let mermaid = `---
-title: ${model.title} - ${levelTitles[model.level as keyof typeof levelTitles]} Diagram
----
-C4${model.level.charAt(0).toUpperCase() + model.level.slice(1)}
+    const includeMap = {
+      landscape: "C4_Landscape",
+      context: "C4_Context",
+      container: "C4_Container",
+      component: "C4_Component",
+      code: "C4_Component", // Use Component for code level
+    }
+
+    let plantuml = `@startuml
+title ${model.title} - ${levelTitles[model.level as keyof typeof levelTitles]} Diagram
 
 `
 
@@ -138,28 +125,28 @@ C4${model.level.charAt(0).toUpperCase() + model.level.slice(1)}
 
       switch (element.type) {
         case "person":
-          mermaid += `    Person(${cleanId}, "${cleanName}", "${cleanDesc}")
+          plantuml += `Person(${cleanId}, "${cleanName}", "${cleanDesc}")
 `
           break
         case "system":
-          mermaid += `    System(${cleanId}, "${cleanName}", "${cleanDesc}"${tech})
+          plantuml += `System(${cleanId}, "${cleanName}", "${cleanDesc}"${tech})
 `
           break
         case "container":
-          mermaid += `    Container(${cleanId}, "${cleanName}", "${cleanDesc}"${tech})
+          plantuml += `Container(${cleanId}, "${cleanName}", "${cleanDesc}"${tech})
 `
           break
         case "component":
-          mermaid += `    Component(${cleanId}, "${cleanName}", "${cleanDesc}"${tech})
+          plantuml += `Component(${cleanId}, "${cleanName}", "${cleanDesc}"${tech})
 `
           break
         default:
-          mermaid += `    System(${cleanId}, "${cleanName}", "${cleanDesc}"${tech})
+          plantuml += `System(${cleanId}, "${cleanName}", "${cleanDesc}"${tech})
 `
       }
     })
 
-    mermaid += "\n"
+    plantuml += "\n"
 
     // Add relationships
     model.relationships.forEach((rel: any) => {
@@ -168,11 +155,19 @@ C4${model.level.charAt(0).toUpperCase() + model.level.slice(1)}
       const cleanDesc = rel.description.replace(/"/g, '\\"')
       const tech = rel.technology ? `, "${rel.technology.replace(/"/g, '\\"')}"` : ""
 
-      mermaid += `    Rel(${cleanFrom}, ${cleanTo}, "${cleanDesc}"${tech})
+      plantuml += `Rel(${cleanFrom}, ${cleanTo}, "${cleanDesc}"${tech})
 `
     })
 
-    return mermaid
+    plantuml += "\n@enduml"
+
+    return plantuml
+  }
+
+  const encodePlantUML = (plantuml: string): string => {
+    // Simple base64 encoding for PlantUML server
+    const encoded = btoa(unescape(encodeURIComponent(plantuml)))
+    return encoded
   }
 
   const handleRefresh = () => {
@@ -180,7 +175,7 @@ C4${model.level.charAt(0).toUpperCase() + model.level.slice(1)}
   }
 
   const handleDownloadPDF = async () => {
-    if (!mermaidRef.current) return
+    if (!diagramRef.current || !currentModel) return
 
     setIsGeneratingPDF(true)
     try {
@@ -189,31 +184,63 @@ C4${model.level.charAt(0).toUpperCase() + model.level.slice(1)}
       const jsPDF = (await import("jspdf")).jsPDF
 
       // Get the diagram container
-      const diagramElement = mermaidRef.current
-      const svgElement = diagramElement.querySelector("svg")
+      const diagramElement = diagramRef.current
+      const imgElement = diagramElement.querySelector("img")
 
-      if (!svgElement) {
+      if (!imgElement) {
         throw new Error("No diagram found to export")
       }
 
-      // Capture the diagram as canvas
-      const canvas = await html2canvas(diagramElement, {
+      const tempContainer = document.createElement("div")
+      tempContainer.style.backgroundColor = "#ffffff"
+      tempContainer.style.padding = "20px"
+      tempContainer.style.position = "absolute"
+      tempContainer.style.left = "-9999px"
+      tempContainer.style.top = "0"
+      tempContainer.appendChild(imgElement.cloneNode(true))
+      document.body.appendChild(tempContainer)
+
+      const canvas = await html2canvas(tempContainer, {
         backgroundColor: "#ffffff",
-        scale: 2, // Higher resolution
+        scale: 4.17, // 600dpi / 144dpi (default) = 4.17x scale for 600dpi
         useCORS: true,
         allowTaint: true,
         logging: false,
       })
 
-      // Create PDF
+      // Clean up temporary container
+      document.body.removeChild(tempContainer)
+
       const imgData = canvas.toDataURL("image/png")
       const pdf = new jsPDF({
-        orientation: canvas.width > canvas.height ? "landscape" : "portrait",
-        unit: "px",
-        format: [canvas.width, canvas.height],
+        orientation: "landscape", // 17x11 is typically landscape
+        unit: "in", // Use inches for precise sizing
+        format: [17, 11], // 17 inches wide by 11 inches tall
       })
 
-      pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height)
+      // Calculate scaling to fit the image within the 17x11 format
+      const pdfWidth = 17
+      const pdfHeight = 11
+      const imgAspectRatio = canvas.width / canvas.height
+      const pdfAspectRatio = pdfWidth / pdfHeight
+
+      let finalWidth, finalHeight, xOffset, yOffset
+
+      if (imgAspectRatio > pdfAspectRatio) {
+        // Image is wider relative to PDF, fit to width
+        finalWidth = pdfWidth
+        finalHeight = pdfWidth / imgAspectRatio
+        xOffset = 0
+        yOffset = (pdfHeight - finalHeight) / 2
+      } else {
+        // Image is taller relative to PDF, fit to height
+        finalHeight = pdfHeight
+        finalWidth = pdfHeight * imgAspectRatio
+        xOffset = (pdfWidth - finalWidth) / 2
+        yOffset = 0
+      }
+
+      pdf.addImage(imgData, "PNG", xOffset, yOffset, finalWidth, finalHeight)
 
       // Generate filename
       const levelTitles = {
@@ -280,7 +307,7 @@ C4${model.level.charAt(0).toUpperCase() + model.level.slice(1)}
           )}
 
           <div
-            ref={mermaidRef}
+            ref={diagramRef}
             className="min-h-64 w-full overflow-auto"
             style={{ minWidth: "100%", minHeight: "300px" }}
           />
@@ -299,26 +326,26 @@ C4${model.level.charAt(0).toUpperCase() + model.level.slice(1)}
       {/* Legend */}
       <Card className="p-4">
         <h4 className="font-medium mb-3">C4 Model Legend</h4>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-[#08427b] rounded border-2 border-[#073b6f]"></div>
-            <span>Person/Actor</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 text-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-5 h-5 bg-[#08427b] rounded border-2 border-[#073b6f] flex-shrink-0"></div>
+            <span className="whitespace-nowrap">Person/Actor</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-[#1168bd] border-2 border-[#0b4884]"></div>
-            <span>Software System</span>
+          <div className="flex items-center gap-3">
+            <div className="w-5 h-5 bg-[#1168bd] border-2 border-[#0b4884] flex-shrink-0"></div>
+            <span className="whitespace-nowrap">Software System</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-[#438dd5] border-2 border-[#2563eb]"></div>
-            <span>Container</span>
+          <div className="flex items-center gap-3">
+            <div className="w-5 h-5 bg-[#438dd5] border-2 border-[#2563eb] flex-shrink-0"></div>
+            <span className="whitespace-nowrap">Container</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-[#85bbf0] border-2 border-[#3b82f6]"></div>
-            <span>Component</span>
+          <div className="flex items-center gap-3">
+            <div className="w-5 h-5 bg-[#85bbf0] border-2 border-[#3b82f6] flex-shrink-0"></div>
+            <span className="whitespace-nowrap">Component</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-gray-400 bg-white"></div>
-            <span>External System</span>
+          <div className="flex items-center gap-3">
+            <div className="w-5 h-5 border-2 border-gray-400 bg-white flex-shrink-0"></div>
+            <span className="whitespace-nowrap">External System</span>
           </div>
         </div>
       </Card>

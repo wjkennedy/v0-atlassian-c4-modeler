@@ -50,6 +50,7 @@ interface PluginComponent {
   atlassianProducts: string[]
   businessFunction: string
   integrationPoints: string[]
+  color?: string
 }
 
 interface PluginAsComponentsProps {
@@ -87,136 +88,13 @@ const categoryColors = {
   Other: "bg-gray-100 text-gray-800 border-gray-200",
 }
 
-const defaultPluginComponents: PluginComponent[] = [
-  {
-    id: "scriptrunner",
-    name: "ScriptRunner for Jira",
-    description: "Automation and customization toolkit for Jira administrators",
-    category: "Workflow & Automation",
-    technology: "Groovy Scripts",
-    vendor: "Adaptavist",
-    isPopular: true,
-    atlassianProducts: ["Jira Software", "Jira Service Management"],
-    businessFunction: "Process Optimization",
-    integrationPoints: ["Workflow", "Custom Fields", "Automation", "JQL"],
-  },
-  {
-    id: "xray",
-    name: "Xray Test Management",
-    description: "Native test management solution for Jira",
-    category: "Testing & QA",
-    technology: "Test Management",
-    vendor: "Xpand IT",
-    isPopular: true,
-    atlassianProducts: ["Jira Software"],
-    businessFunction: "Quality Assurance",
-    integrationPoints: ["Issue Management", "Workflow", "Dashboard"],
-  },
-  {
-    id: "tempo",
-    name: "Tempo Timesheets",
-    description: "AI-powered time tracking and project management",
-    category: "Time Tracking",
-    technology: "Time Tracking",
-    vendor: "Tempo",
-    isPopular: true,
-    atlassianProducts: ["Jira Software", "Jira Service Management"],
-    businessFunction: "Resource Management",
-    integrationPoints: ["Custom Fields", "Dashboard", "REST API"],
-  },
-  {
-    id: "structure",
-    name: "Structure by Tempo",
-    description: "Portfolio and project management for Jira",
-    category: "Project Management",
-    technology: "Portfolio Management",
-    vendor: "Tempo",
-    isPopular: true,
-    atlassianProducts: ["Jira Software"],
-    businessFunction: "Project Delivery",
-    integrationPoints: ["Project Management", "Dashboard", "JQL"],
-  },
-  {
-    id: "eazybi",
-    name: "eazyBI Reports",
-    description: "Advanced reporting and analytics for Jira",
-    category: "Reporting & Analytics",
-    technology: "Business Intelligence",
-    vendor: "eazyBI",
-    isPopular: true,
-    atlassianProducts: ["Jira Software", "Jira Service Management"],
-    businessFunction: "Business Intelligence",
-    integrationPoints: ["Dashboard", "REST API", "Custom Fields"],
-  },
-  {
-    id: "github",
-    name: "GitHub for Jira",
-    description: "Connect your GitHub repositories to Jira for seamless development workflow",
-    category: "Development & CI/CD",
-    technology: "Git Integration",
-    vendor: "GitHub",
-    isPopular: true,
-    atlassianProducts: ["Jira Software"],
-    businessFunction: "Development Workflow",
-    integrationPoints: ["Issue Management", "Workflow", "REST API"],
-  },
-  {
-    id: "figma",
-    name: "Figma for Jira",
-    description: "Embed Figma designs directly in Jira issues for better design collaboration",
-    category: "Visualization",
-    technology: "Design Integration",
-    vendor: "Figma",
-    isPopular: true,
-    atlassianProducts: ["Jira Software"],
-    businessFunction: "Design Collaboration",
-    integrationPoints: ["Issue Management", "Custom Fields"],
-  },
-  {
-    id: "gitlab",
-    name: "GitLab for Jira",
-    description: "Integrate GitLab repositories with Jira for complete DevOps visibility",
-    category: "Development & CI/CD",
-    technology: "Git Integration",
-    vendor: "GitLab",
-    isPopular: true,
-    atlassianProducts: ["Jira Software"],
-    businessFunction: "DevOps Integration",
-    integrationPoints: ["Issue Management", "Workflow", "REST API"],
-  },
-  {
-    id: "zephyr",
-    name: "Zephyr Scale",
-    description: "Enterprise test management solution for Jira",
-    category: "Testing & QA",
-    technology: "Test Management",
-    vendor: "SmartBear",
-    isPopular: true,
-    atlassianProducts: ["Jira Software"],
-    businessFunction: "Quality Assurance",
-    integrationPoints: ["Issue Management", "Workflow", "Dashboard"],
-  },
-  {
-    id: "teams",
-    name: "Microsoft Teams for Jira",
-    description: "Collaborate on Jira issues directly from Microsoft Teams",
-    category: "Communication",
-    technology: "Chat Integration",
-    vendor: "Microsoft",
-    isPopular: true,
-    atlassianProducts: ["Jira Software", "Jira Service Management"],
-    businessFunction: "Team Collaboration",
-    integrationPoints: ["Issue Management", "Webhooks"],
-  },
-]
-
 export function PluginAsComponents({
   selectedPlugins,
   onSelectionChange,
   customComponents,
   onCustomComponentsChange,
 }: PluginAsComponentsProps) {
-  const [pluginComponents, setPluginComponents] = useState<PluginComponent[]>(defaultPluginComponents)
+  const [pluginComponents, setPluginComponents] = useState<PluginComponent[]>([])
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [editingPlugin, setEditingPlugin] = useState<PluginComponent | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
@@ -233,9 +111,10 @@ export function PluginAsComponents({
       technology: plugin.technology,
       vendor: plugin.vendor,
       isCustom: true,
+      color:
+        categoryColors[plugin.category as keyof typeof categoryColors] || "bg-gray-100 text-gray-800 border-gray-200",
     }))
 
-    // Merge with existing custom components, avoiding duplicates
     const existingNonPlugins = customComponents.filter((comp) => comp.type !== "plugin")
     const updatedCustomComponents = [...existingNonPlugins, ...pluginAsCustomComponents]
     onCustomComponentsChange(updatedCustomComponents)
@@ -244,16 +123,16 @@ export function PluginAsComponents({
   useEffect(() => {
     const loadPluginsFromFile = async () => {
       try {
-        const response = await fetch("/data/atlassian-plugins.json")
-        if (response.ok) {
-          const plugins = await response.json()
-          if (Array.isArray(plugins) && plugins.length > 0) {
-            console.log("[v0] Loaded plugins from JSON file:", plugins.length)
-            setPluginComponents(plugins)
-          }
+        const pluginsModule = await import("../data/atlassian-plugins.json")
+        const plugins = pluginsModule.default
+        if (Array.isArray(plugins) && plugins.length > 0) {
+          console.log("[v0] Loaded plugins from JSON file:", plugins.length)
+          setPluginComponents(plugins)
+        } else {
+          console.log("[v0] No plugins found in JSON file")
         }
       } catch (error) {
-        console.log("[v0] Failed to load plugins from JSON, using defaults:", error)
+        console.log("[v0] Failed to load plugins from JSON:", error)
       }
     }
 
@@ -280,6 +159,7 @@ export function PluginAsComponents({
       ? selectedPlugins.filter((id) => id !== pluginId)
       : [...selectedPlugins, pluginId]
     onSelectionChange(newSelection)
+    console.log("[v0] Plugin selection changed:", pluginId, newSelection.length)
   }
 
   const handleAddPlugin = (plugin: Omit<PluginComponent, "id">) => {
@@ -320,7 +200,6 @@ export function PluginAsComponents({
         try {
           const importedPlugins = JSON.parse(e.target?.result as string)
           if (Array.isArray(importedPlugins)) {
-            // Validate plugin structure
             const validPlugins = importedPlugins.filter(
               (plugin) => plugin.id && plugin.name && plugin.description && plugin.category,
             )
@@ -336,13 +215,11 @@ export function PluginAsComponents({
       }
       reader.readAsText(file)
     }
-    // Reset the input
     event.target.value = ""
   }
 
   return (
     <div className="space-y-6">
-      {/* Header and Controls */}
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold">Plugin Components</h3>
@@ -372,7 +249,6 @@ export function PluginAsComponents({
         </div>
       </div>
 
-      {/* Search and Filters */}
       <div className="space-y-4">
         <Input placeholder="Search plugins..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
 
@@ -400,24 +276,26 @@ export function PluginAsComponents({
         </div>
       </div>
 
-      {/* Plugins Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredPlugins.map((plugin) => {
           const isSelected = selectedPlugins.includes(plugin.id)
           const Icon = categoryIcons[plugin.category as keyof typeof categoryIcons] || Package
-          const colorClass =
-            categoryColors[plugin.category as keyof typeof categoryColors] ||
-            "bg-gray-100 text-gray-800 border-gray-200"
+          const colorClass = plugin.color || "bg-gray-100 text-gray-800 border-gray-200"
 
           return (
             <Card
               key={plugin.id}
               className={`cursor-pointer transition-all hover:shadow-md ${isSelected ? "ring-2 ring-primary" : ""}`}
+              onClick={() => handlePluginToggle(plugin.id)}
             >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-3">
-                    <Checkbox checked={isSelected} onCheckedChange={() => handlePluginToggle(plugin.id)} />
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => handlePluginToggle(plugin.id)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
                     <div className="p-2 rounded-md bg-primary/10">
                       <Icon className="h-4 w-4 text-primary" />
                     </div>
@@ -429,10 +307,24 @@ export function PluginAsComponents({
                         Popular
                       </Badge>
                     )}
-                    <Button variant="ghost" size="sm" onClick={() => setEditingPlugin(plugin)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setEditingPlugin(plugin)
+                      }}
+                    >
                       <Edit className="h-3 w-3" />
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDeletePlugin(plugin.id)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeletePlugin(plugin.id)
+                      }}
+                    >
                       <Trash2 className="h-3 w-3" />
                     </Button>
                   </div>
@@ -461,7 +353,6 @@ export function PluginAsComponents({
         })}
       </div>
 
-      {/* Edit Dialog */}
       {editingPlugin && (
         <Dialog open={!!editingPlugin} onOpenChange={() => setEditingPlugin(null)}>
           <DialogContent className="max-w-2xl">

@@ -5,75 +5,75 @@
 
 :root {
   /* Updated color tokens to match the professional C4 generator design brief */
-  --background: oklch(0.99 0.01 320); /* #fefcfe - Soft warm white */
-  --foreground: oklch(0.3 0.02 280); /* #4a4754 - Soft dark purple-gray */
-  --card: oklch(0.97 0.01 320); /* #faf8fa - Soft card background */
-  --card-foreground: oklch(0.35 0.02 280); /* #524f5d - Card text */
-  --popover: oklch(0.99 0.01 320); /* #fefcfe - Popover background */
-  --popover-foreground: oklch(0.3 0.02 280); /* #4a4754 - Popover text */
-  --primary: oklch(0.65 0.12 280); /* #8b7fb8 - Soft lavender primary */
-  --primary-foreground: oklch(0.99 0.01 320); /* #fefcfe - Primary button text */
-  --secondary: oklch(0.75 0.08 50); /* #c4b5a0 - Soft peachy secondary */
-  --secondary-foreground: oklch(0.3 0.02 280); /* #4a4754 - Secondary button text */
-  --muted: oklch(0.95 0.01 320); /* #f5f3f5 - Muted background */
-  --muted-foreground: oklch(0.45 0.02 280); /* #6b6575 - Muted text */
-  --accent: oklch(0.8 0.06 180); /* #b8c4b5 - Soft mint accent */
-  --accent-foreground: oklch(0.3 0.02 280); /* #4a4754 - Accent text */
-  --destructive: oklch(0.65 0.15 15); /* #c48b8b - Soft coral destructive */
-  --destructive-foreground: oklch(0.99 0.01 320); /* #fefcfe - Destructive text */
-  --border: oklch(0.9 0.01 320); /* #e8e6e8 - Soft border */
-  --input: oklch(0.99 0.01 320); /* #fefcfe - Input background */
-  --ring: oklch(0.65 0.12 280); /* #8b7fb8 - Focus ring */
-  --chart-1: oklch(0.7 0.1 280); /* #9d92c4 - Soft purple chart */
-  --chart-2: oklch(0.75 0.08 200); /* #b5c4c0 - Soft teal chart */
-  --chart-3: oklch(0.8 0.06 60); /* #c4c0b5 - Soft yellow chart */
-  --chart-4: oklch(0.75 0.08 140); /* #b5c4b8 - Soft green chart */
-  --chart-5: oklch(0.75 0.08 340); /* #c4b5c0 - Soft pink chart */
+  --background: #fefcfe; /* Soft warm white */
+  --foreground: #4a4754; /* Soft dark purple-gray */
+  --card: #faf8fa; /* Soft card background */
+  --card-foreground: #524f5d; /* Card text */
+  --popover: #fefcfe; /* Popover background */
+  --popover-foreground: #4a4754; /* Popover text */
+  --primary: #8b7fb8; /* Soft lavender primary */
+  --primary-foreground: #fefcfe; /* Primary button text */
+  --secondary: #c4b5a0; /* Soft peachy secondary */
+  --secondary-foreground: #4a4754; /* Secondary button text */
+  --muted: #f5f3f5; /* Muted background */
+  --muted-foreground: #6b6575; /* Muted text */
+  --accent: #b8c4b5; /* Soft mint accent */
+  --accent-foreground: #4a4754; /* Accent text */
+  --destructive: #c48b8b; /* Soft coral destructive */
+  --destructive-foreground: #fefcfe; /* Destructive text */
+  --border: #e8e6e8; /* Soft border */
+  --input: #fefcfe; /* Input background */
+  --ring: #8b7fb8; /* Focus ring */
+  --chart-1: #9d92c4; /* Soft purple chart */
+  --chart-2: #b5c4c0; /* Soft teal chart */
+  --chart-3: #c4c0b5; /* Soft yellow chart */
+  --chart-4: #b5c4b8; /* Soft green chart */
+  --chart-5: #c4b5c0; /* Soft pink chart */
   --radius: 0.5rem; /* Slightly more rounded for softpop aesthetic */
-  --sidebar: oklch(0.97 0.01 320); /* #faf8fa - Sidebar background */
-  --sidebar-foreground: oklch(0.3 0.02 280); /* #4a4754 - Sidebar text */
-  --sidebar-primary: oklch(0.99 0.01 320); /* #fefcfe - Primary sidebar item */
-  --sidebar-primary-foreground: oklch(0.3 0.02 280); /* #4a4754 - Primary sidebar text */
-  --sidebar-accent: oklch(0.65 0.12 280); /* #8b7fb8 - Sidebar accent */
-  --sidebar-accent-foreground: oklch(0.99 0.01 320); /* #fefcfe - Sidebar accent text */
-  --sidebar-border: oklch(0.9 0.01 320); /* #e8e6e8 - Sidebar border */
-  --sidebar-ring: oklch(0.75 0.08 200); /* #b5c4c0 - Sidebar focus ring */
+  --sidebar: #faf8fa; /* Sidebar background */
+  --sidebar-foreground: #4a4754; /* Sidebar text */
+  --sidebar-primary: #fefcfe; /* Primary sidebar item */
+  --sidebar-primary-foreground: #4a4754; /* Primary sidebar text */
+  --sidebar-accent: #8b7fb8; /* Sidebar accent */
+  --sidebar-accent-foreground: #fefcfe; /* Sidebar accent text */
+  --sidebar-border: #e8e6e8; /* Sidebar border */
+  --sidebar-ring: #b5c4c0; /* Sidebar focus ring */
 }
 
 .dark {
   /* Dark mode softpop palette - muted darks with soft highlights */
-  --background: oklch(0.15 0.02 280); /* #2a2730 - Soft dark purple */
-  --foreground: oklch(0.9 0.01 320); /* #e8e6e8 - Soft light text */
-  --card: oklch(0.18 0.02 280); /* #312e38 - Dark card background */
-  --card-foreground: oklch(0.9 0.01 320); /* #e8e6e8 - Card text */
-  --popover: oklch(0.15 0.02 280); /* #2a2730 - Popover background */
-  --popover-foreground: oklch(0.9 0.01 320); /* #e8e6e8 - Popover text */
-  --primary: oklch(0.7 0.1 280); /* #9d92c4 - Soft lavender primary */
-  --primary-foreground: oklch(0.15 0.02 280); /* #2a2730 - Primary button text */
-  --secondary: oklch(0.25 0.02 280); /* #3d3a42 - Dark secondary */
-  --secondary-foreground: oklch(0.9 0.01 320); /* #e8e6e8 - Secondary text */
-  --muted: oklch(0.22 0.02 280); /* #38353c - Muted background */
-  --muted-foreground: oklch(0.65 0.01 320); /* #a8a6a8 - Muted text */
-  --accent: oklch(0.25 0.02 280); /* #3d3a42 - Accent background */
-  --accent-foreground: oklch(0.9 0.01 320); /* #e8e6e8 - Accent text */
-  --destructive: oklch(0.55 0.12 15); /* #a67575 - Soft coral destructive */
-  --destructive-foreground: oklch(0.9 0.01 320); /* #e8e6e8 - Destructive text */
-  --border: oklch(0.25 0.02 280); /* #3d3a42 - Border */
-  --input: oklch(0.25 0.02 280); /* #3d3a42 - Input background */
-  --ring: oklch(0.7 0.1 280); /* #9d92c4 - Focus ring */
-  --chart-1: oklch(0.6 0.08 280); /* #8075a6 - Chart color 1 */
-  --chart-2: oklch(0.65 0.06 200); /* #9aa6a2 - Chart color 2 */
-  --chart-3: oklch(0.7 0.04 60); /* #a6a29a - Chart color 3 */
-  --chart-4: oklch(0.65 0.06 140); /* #9aa69d - Chart color 4 */
-  --chart-5: oklch(0.65 0.06 340); /* #a69aa2 - Chart color 5 */
-  --sidebar: oklch(0.18 0.02 280); /* #312e38 - Sidebar background */
-  --sidebar-foreground: oklch(0.9 0.01 320); /* #e8e6e8 - Sidebar text */
-  --sidebar-primary: oklch(0.7 0.1 280); /* #9d92c4 - Primary sidebar */
-  --sidebar-primary-foreground: oklch(0.15 0.02 280); /* #2a2730 - Primary sidebar text */
-  --sidebar-accent: oklch(0.25 0.02 280); /* #3d3a42 - Sidebar accent */
-  --sidebar-accent-foreground: oklch(0.9 0.01 320); /* #e8e6e8 - Sidebar accent text */
-  --sidebar-border: oklch(0.25 0.02 280); /* #3d3a42 - Sidebar border */
-  --sidebar-ring: oklch(0.65 0.06 200); /* #9aa6a2 - Sidebar focus ring */
+  --background: #2a2730; /* Soft dark purple */
+  --foreground: #e8e6e8; /* Soft light text */
+  --card: #312e38; /* Dark card background */
+  --card-foreground: #e8e6e8; /* Card text */
+  --popover: #2a2730; /* Popover background */
+  --popover-foreground: #e8e6e8; /* Popover text */
+  --primary: #9d92c4; /* Soft lavender primary */
+  --primary-foreground: #2a2730; /* Primary button text */
+  --secondary: #3d3a42; /* Dark secondary */
+  --secondary-foreground: #e8e6e8; /* Secondary text */
+  --muted: #38353c; /* Muted background */
+  --muted-foreground: #a8a6a8; /* Muted text */
+  --accent: #3d3a42; /* Accent background */
+  --accent-foreground: #e8e6e8; /* Accent text */
+  --destructive: #a67575; /* Soft coral destructive */
+  --destructive-foreground: #e8e6e8; /* Destructive text */
+  --border: #3d3a42; /* Border */
+  --input: #3d3a42; /* Input background */
+  --ring: #9d92c4; /* Focus ring */
+  --chart-1: #8075a6; /* Chart color 1 */
+  --chart-2: #9aa6a2; /* Chart color 2 */
+  --chart-3: #a6a29a; /* Chart color 3 */
+  --chart-4: #9aa69d; /* Chart color 4 */
+  --chart-5: #a69aa2; /* Chart color 5 */
+  --sidebar: #312e38; /* Sidebar background */
+  --sidebar-foreground: #e8e6e8; /* Sidebar text */
+  --sidebar-primary: #9d92c4; /* Primary sidebar */
+  --sidebar-primary-foreground: #2a2730; /* Primary sidebar text */
+  --sidebar-accent: #3d3a42; /* Sidebar accent */
+  --sidebar-accent-foreground: #e8e6e8; /* Sidebar accent text */
+  --sidebar-border: #3d3a42; /* Sidebar border */
+  --sidebar-ring: #9aa6a2; /* Sidebar focus ring */
 }
 
 @theme inline {

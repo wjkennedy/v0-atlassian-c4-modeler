@@ -64,22 +64,16 @@ export class C4ModelGenerator {
 
   generatePlantUML(): string {
     const includeMap = {
-      landscape: "C4_Context.puml", // Added landscape mapping
+      landscape: "C4_Landscape.puml",
       context: "C4_Context.puml",
       container: "C4_Container.puml",
       component: "C4_Component.puml",
       code: "C4_Component.puml",
-      plugin: "C4_Component.puml", // Added plugin mapping
     }
 
+    const includeFile = includeMap[this.model.level as keyof typeof includeMap] || "C4_Component.puml"
+
     let puml = `@startuml
-!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
-!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
-!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
-
-!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
-!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
-
 title ${this.model.title.replace(/[^\w\s-]/g, "")} - ${this.model.level.charAt(0).toUpperCase() + this.model.level.slice(1)} Diagram
 ${this.model.description ? `\n!define DESCRIPTION ${this.model.description.replace(/[^\w\s-]/g, "")}` : ""}
 

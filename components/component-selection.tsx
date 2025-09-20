@@ -295,11 +295,13 @@ export function ComponentSelection({
                     >
                       <Checkbox
                         checked={isSelected}
-                        onChange={() => handleComponentToggle(component.id)}
+                        onCheckedChange={() => handleComponentToggle(component.id)}
                         className="mt-1"
                       />
-                      <div className={`p-2 rounded-md ${component.color} bg-opacity-10`}>
-                        <Icon className={`h-4 w-4 ${component.color.replace("bg-", "text-")}`} />
+                      <div className={`p-2 rounded-md ${component.color || "bg-gray-500"} bg-opacity-10`}>
+                        <Icon
+                          className={`h-4 w-4 ${component.color ? component.color.replace("bg-", "text-") : "text-gray-500"}`}
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-sm">{component.name}</h4>

@@ -11,11 +11,13 @@ import { DiagramPreview } from "@/components/diagram-preview"
 import { ConfigurationPanel } from "@/components/configuration-panel"
 import { ExportPanel } from "@/components/export-panel"
 import { SettingsModal } from "@/components/settings-modal"
-import { Building2, Network, Settings, Download, Eye, Layers } from "lucide-react"
+import { PluginAsComponents } from "@/components/plugin-as-components"
+import { Building2, Network, Settings, Download, Eye, Layers, Package } from "lucide-react"
 
 export default function C4GeneratorPage() {
   const [selectedComponents, setSelectedComponents] = useState<string[]>([])
   const [selectedIntegrations, setSelectedIntegrations] = useState<string[]>([])
+  const [selectedPlugins, setSelectedPlugins] = useState<string[]>([])
   const [diagramConfig, setDiagramConfig] = useState({
     title: "Atlassian Cloud Architecture",
     level: "container",
@@ -75,7 +77,7 @@ export default function C4GeneratorPage() {
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="components" className="w-full">
-                  <TabsList className="grid w-full grid-cols-4">
+                  <TabsList className="grid w-full grid-cols-5">
                     <TabsTrigger value="components" className="flex items-center gap-2">
                       <Building2 className="h-4 w-4" />
                       Components
@@ -83,6 +85,10 @@ export default function C4GeneratorPage() {
                     <TabsTrigger value="integrations" className="flex items-center gap-2">
                       <Network className="h-4 w-4" />
                       Integrations
+                    </TabsTrigger>
+                    <TabsTrigger value="plugins" className="flex items-center gap-2">
+                      <Package className="h-4 w-4" />
+                      Plugins
                     </TabsTrigger>
                     <TabsTrigger value="config" className="flex items-center gap-2">
                       <Settings className="h-4 w-4" />
@@ -107,6 +113,15 @@ export default function C4GeneratorPage() {
                       selectedIntegrations={selectedIntegrations}
                       onSelectionChange={setSelectedIntegrations}
                       customIntegrations={customIntegrations}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="plugins" className="mt-6">
+                    <PluginAsComponents
+                      selectedPlugins={selectedPlugins}
+                      onSelectionChange={setSelectedPlugins}
+                      customComponents={customComponents}
+                      onCustomComponentsChange={handleCustomComponentsUpdate}
                     />
                   </TabsContent>
 
@@ -158,6 +173,10 @@ export default function C4GeneratorPage() {
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Integrations</span>
                   <Badge variant="outline">{selectedIntegrations.length}</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Plugins</span>
+                  <Badge variant="outline">{selectedPlugins.length}</Badge>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Diagram Level</span>

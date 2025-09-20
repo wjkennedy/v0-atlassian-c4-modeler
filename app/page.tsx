@@ -155,6 +155,7 @@ export default function C4GeneratorPage() {
                 <DiagramPreview
                   components={selectedComponents}
                   integrations={selectedIntegrations}
+                  plugins={selectedPlugins}
                   config={diagramConfig}
                 />
               </CardContent>

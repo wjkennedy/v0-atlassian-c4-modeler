@@ -10,6 +10,7 @@ import { createMultiLevelAtlassianC4Model, type MultiLevelC4Model } from "@/lib/
 interface DiagramPreviewProps {
   components: string[]
   integrations: string[]
+  plugins: string[]
   config: {
     title: string
     level: string
@@ -17,7 +18,7 @@ interface DiagramPreviewProps {
   }
 }
 
-export function DiagramPreview({ components, integrations, config }: DiagramPreviewProps) {
+export function DiagramPreview({ components, integrations, plugins, config }: DiagramPreviewProps) {
   const diagramRef = useRef<HTMLDivElement>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [selectedLevel, setSelectedLevel] = useState<keyof MultiLevelC4Model>("context")
@@ -28,7 +29,7 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
 
   useEffect(() => {
     setRefreshKey((prev) => prev + 1)
-  }, [components, integrations, config])
+  }, [components, integrations, plugins, config])
 
   useEffect(() => {
     const renderDiagram = async () => {
@@ -37,8 +38,8 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
         return
       }
 
-      if (components.length === 0) {
-        console.log("[v0] No components to render")
+      if (components.length === 0 && integrations.length === 0 && plugins.length === 0) {
+        console.log("[v0] No components, integrations, or plugins to render")
         return
       }
 
@@ -46,8 +47,7 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
       setError(null)
 
       try {
-        // Generate the multi-level model
-        const multiModel = createMultiLevelAtlassianC4Model(components, integrations, config.title)
+        const multiModel = createMultiLevelAtlassianC4Model(components, integrations, config.title, plugins)
         const selectedModel = multiModel[selectedLevel]
 
         setCurrentModel(selectedModel)
@@ -82,13 +82,12 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
     }, 100)
 
     return () => clearTimeout(timeoutId)
-  }, [components, integrations, config, selectedLevel, refreshKey])
+  }, [components, integrations, plugins, config, selectedLevel, refreshKey])
 
   const generateSVGDiagram = (model: any): string => {
     const elements = model.elements || []
     const relationships = model.relationships || []
 
-    // Calculate layout
     const boxWidth = 200
     const boxHeight = 120
     const spacing = 80
@@ -96,9 +95,8 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
     const rows = Math.ceil(elements.length / cols)
 
     const svgWidth = Math.max(800, cols * (boxWidth + spacing) + spacing)
-    const svgHeight = Math.max(600, rows * (boxHeight + spacing) + spacing + 100) // Extra space for title
+    const svgHeight = Math.max(600, rows * (boxHeight + spacing) + spacing + 100)
 
-    // Color scheme for different element types
     const colors = {
       person: { bg: "#08427b", border: "#073b6f", text: "#ffffff" },
       system: { bg: "#1168bd", border: "#0b4884", text: "#ffffff" },
@@ -122,42 +120,36 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
           </marker>
         </defs>
         
-        <!-- Title -->
         <text x="${svgWidth / 2}" y="40" class="title-text" fill="#333">${model.title}</text>
     `
 
-    // Position elements in a grid
     const elementPositions: Record<string, { x: number; y: number }> = {}
 
     elements.forEach((element: any, index: number) => {
       const col = index % cols
       const row = Math.floor(index / cols)
       const x = spacing + col * (boxWidth + spacing)
-      const y = 80 + spacing + row * (boxHeight + spacing) // 80px offset for title
+      const y = 80 + spacing + row * (boxHeight + spacing)
 
       elementPositions[element.id] = { x, y }
 
       const elementType = element.type || "system"
       const color = colors[elementType as keyof typeof colors] || colors.system
 
-      // Draw element box
       svg += `
         <rect x="${x}" y="${y}" width="${boxWidth}" height="${boxHeight}" 
               fill="${color.bg}" stroke="${color.border}" class="element-box" rx="8" />
         
-        <!-- Element name -->
         <text x="${x + boxWidth / 2}" y="${y + 30}" class="element-text" 
               fill="${color.text}" fontSize="14" fontWeight="bold">
           ${element.name}
         </text>
         
-        <!-- Element description -->
         <text x="${x + boxWidth / 2}" y="${y + 50}" class="element-text" 
               fill="${color.text}" fontSize="11">
           ${element.description}
         </text>
         
-        <!-- Element technology -->
         ${
           element.technology
             ? `
@@ -171,19 +163,16 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
       `
     })
 
-    // Draw relationships
     relationships.forEach((rel: any) => {
       const fromPos = elementPositions[rel.from]
       const toPos = elementPositions[rel.to]
 
       if (fromPos && toPos) {
-        // Calculate connection points (center of boxes)
         const fromX = fromPos.x + boxWidth / 2
         const fromY = fromPos.y + boxHeight / 2
         const toX = toPos.x + boxWidth / 2
         const toY = toPos.y + boxHeight / 2
 
-        // Calculate midpoint for label
         const midX = (fromX + toX) / 2
         const midY = (fromY + toY) / 2
 
@@ -217,11 +206,9 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
 
     setIsGeneratingPDF(true)
     try {
-      // Dynamically import the PDF generation libraries
       const html2canvas = (await import("html2canvas")).default
       const jsPDF = (await import("jspdf")).jsPDF
 
-      // Get the diagram container
       const diagramElement = diagramRef.current
       const svgElement = diagramElement.querySelector("svg")
 
@@ -240,23 +227,21 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
 
       const canvas = await html2canvas(tempContainer, {
         backgroundColor: "#ffffff",
-        scale: 4.17, // 600dpi / 144dpi (default) = 4.17x scale for 600dpi
+        scale: 4.17,
         useCORS: true,
         allowTaint: true,
         logging: false,
       })
 
-      // Clean up temporary container
       document.body.removeChild(tempContainer)
 
       const imgData = canvas.toDataURL("image/png")
       const pdf = new jsPDF({
-        orientation: "landscape", // 17x11 is typically landscape
-        unit: "in", // Use inches for precise sizing
-        format: [17, 11], // 17 inches wide by 11 inches tall
+        orientation: "landscape",
+        unit: "in",
+        format: [17, 11],
       })
 
-      // Calculate scaling to fit the image within the 17x11 format
       const pdfWidth = 17
       const pdfHeight = 11
       const imgAspectRatio = canvas.width / canvas.height
@@ -265,13 +250,11 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
       let finalWidth, finalHeight, xOffset, yOffset
 
       if (imgAspectRatio > pdfAspectRatio) {
-        // Image is wider relative to PDF, fit to width
         finalWidth = pdfWidth
         finalHeight = pdfWidth / imgAspectRatio
         xOffset = 0
         yOffset = (pdfHeight - finalHeight) / 2
       } else {
-        // Image is taller relative to PDF, fit to height
         finalHeight = pdfHeight
         finalWidth = pdfHeight * imgAspectRatio
         xOffset = (pdfWidth - finalWidth) / 2
@@ -280,7 +263,6 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
 
       pdf.addImage(imgData, "PNG", xOffset, yOffset, finalWidth, finalHeight)
 
-      // Generate filename
       const levelTitles = {
         landscape: "System-Landscape",
         context: "System-Context",
@@ -301,7 +283,6 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
 
   return (
     <div className="space-y-4">
-      {/* Controls */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Select value={selectedLevel} onValueChange={(value) => setSelectedLevel(value as keyof MultiLevelC4Model)}>
@@ -332,7 +313,6 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
         </div>
       </div>
 
-      {/* Diagram Canvas */}
       <Card className="p-4">
         <div className="relative overflow-auto max-h-96 border rounded-lg bg-white">
           {isLoading && (
@@ -350,18 +330,17 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
             style={{ minWidth: "100%", minHeight: "300px" }}
           />
 
-          {components.length === 0 && !isLoading && (
+          {components.length === 0 && integrations.length === 0 && plugins.length === 0 && !isLoading && (
             <div className="flex items-center justify-center h-64 text-gray-500">
               <div className="text-center">
-                <p className="mb-2">No components selected</p>
-                <p className="text-sm">Select components and integrations to generate a diagram</p>
+                <p className="mb-2">No components, integrations, or plugins selected</p>
+                <p className="text-sm">Select components, integrations, and plugins to generate a diagram</p>
               </div>
             </div>
           )}
         </div>
       </Card>
 
-      {/* Legend */}
       <Card className="p-4">
         <h4 className="font-medium mb-3">C4 Model Legend</h4>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 text-sm">
@@ -391,7 +370,6 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
   )
 }
 
-// Helper functions to get component and integration data
 function getComponentData(id: string) {
   const components: Record<string, { name: string; description: string; color: string }> = {
     "jira-software": { name: "Jira Software", description: "Project management", color: "#0052cc" },

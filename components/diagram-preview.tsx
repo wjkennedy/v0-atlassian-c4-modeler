@@ -32,7 +32,15 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
 
   useEffect(() => {
     const renderDiagram = async () => {
-      if (!diagramRef.current || components.length === 0) return
+      if (!diagramRef.current) {
+        console.log("[v0] Diagram ref not ready yet")
+        return
+      }
+
+      if (components.length === 0) {
+        console.log("[v0] No components to render")
+        return
+      }
 
       setIsLoading(true)
       setError(null)
@@ -44,43 +52,21 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
 
         setCurrentModel(selectedModel)
 
-        const plantumlSyntax = generatePlantUMLDiagram(selectedModel)
+        const svgDiagram = generateSVGDiagram(selectedModel)
 
-        const encodedUML = encodePlantUML(plantumlSyntax)
-        const imageUrl = `https://www.plantuml.com/plantuml/svg/${encodedUML}`
-
-        // Clear previous content
-        diagramRef.current.innerHTML = ""
-
-        // Create image element
-        const img = document.createElement("img")
-        img.src = imageUrl
-        img.alt = `${selectedModel.title} - ${selectedLevel} diagram`
-        img.style.maxWidth = "100%"
-        img.style.height = "auto"
-        img.style.display = "block"
-        img.style.margin = "0 auto"
-
-        img.onload = () => {
-          setIsLoading(false)
+        if (diagramRef.current) {
+          diagramRef.current.innerHTML = svgDiagram
         }
-
-        img.onerror = () => {
-          setError("Failed to render PlantUML diagram")
-          setIsLoading(false)
-        }
-
-        diagramRef.current.appendChild(img)
+        setIsLoading(false)
       } catch (err) {
-        console.error("[v0] PlantUML rendering error:", err)
+        console.error("[v0] Diagram rendering error:", err)
         setError(err instanceof Error ? err.message : "Failed to render diagram")
 
-        // Fallback to simple text representation
         if (diagramRef.current) {
           diagramRef.current.innerHTML = `
             <div class="p-8 text-center text-gray-500">
               <p class="mb-2">Diagram rendering failed</p>
-              <p class="text-sm">${error || "Unknown error"}</p>
+              <p class="text-sm">${err instanceof Error ? err.message : "Unknown error"}</p>
               <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded">
                 Retry
               </button>
@@ -91,83 +77,127 @@ export function DiagramPreview({ components, integrations, config }: DiagramPrev
       }
     }
 
-    renderDiagram()
-  }, [components, integrations, config, selectedLevel, refreshKey, error])
+    const timeoutId = setTimeout(() => {
+      renderDiagram()
+    }, 100)
 
-  const generatePlantUMLDiagram = (model: any): string => {
-    const levelTitles = {
-      landscape: "System Landscape",
-      context: "System Context",
-      container: "Container",
-      component: "Component",
-      code: "Code",
+    return () => clearTimeout(timeoutId)
+  }, [components, integrations, config, selectedLevel, refreshKey])
+
+  const generateSVGDiagram = (model: any): string => {
+    const elements = model.elements || []
+    const relationships = model.relationships || []
+
+    // Calculate layout
+    const boxWidth = 200
+    const boxHeight = 120
+    const spacing = 80
+    const cols = Math.ceil(Math.sqrt(elements.length))
+    const rows = Math.ceil(elements.length / cols)
+
+    const svgWidth = Math.max(800, cols * (boxWidth + spacing) + spacing)
+    const svgHeight = Math.max(600, rows * (boxHeight + spacing) + spacing + 100) // Extra space for title
+
+    // Color scheme for different element types
+    const colors = {
+      person: { bg: "#08427b", border: "#073b6f", text: "#ffffff" },
+      system: { bg: "#1168bd", border: "#0b4884", text: "#ffffff" },
+      container: { bg: "#438dd5", border: "#2563eb", text: "#ffffff" },
+      component: { bg: "#85bbf0", border: "#3b82f6", text: "#000000" },
+      external: { bg: "#ffffff", border: "#6b7280", text: "#000000" },
     }
 
-    const includeMap = {
-      landscape: "C4_Landscape",
-      context: "C4_Context",
-      container: "C4_Container",
-      component: "C4_Component",
-      code: "C4_Component", // Use Component for code level
-    }
+    let svg = `
+      <svg width="${svgWidth}" height="${svgHeight}" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <style>
+            .element-box { stroke-width: 2; }
+            .element-text { font-family: Arial, sans-serif; text-anchor: middle; dominant-baseline: middle; }
+            .title-text { font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; text-anchor: middle; }
+            .relationship-line { stroke: #666; stroke-width: 2; marker-end: url(#arrowhead); }
+            .relationship-text { font-family: Arial, sans-serif; font-size: 12px; text-anchor: middle; fill: #666; }
+          </style>
+          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#666" />
+          </marker>
+        </defs>
+        
+        <!-- Title -->
+        <text x="${svgWidth / 2}" y="40" class="title-text" fill="#333">${model.title}</text>
+    `
 
-    let plantuml = `@startuml
-title ${model.title} - ${levelTitles[model.level as keyof typeof levelTitles]} Diagram
+    // Position elements in a grid
+    const elementPositions: Record<string, { x: number; y: number }> = {}
 
-`
+    elements.forEach((element: any, index: number) => {
+      const col = index % cols
+      const row = Math.floor(index / cols)
+      const x = spacing + col * (boxWidth + spacing)
+      const y = 80 + spacing + row * (boxHeight + spacing) // 80px offset for title
 
-    // Add elements based on type
-    model.elements.forEach((element: any) => {
-      const cleanId = element.id.replace(/[^a-zA-Z0-9]/g, "_")
-      const cleanName = element.name.replace(/"/g, '\\"')
-      const cleanDesc = element.description.replace(/"/g, '\\"')
-      const tech = element.technology ? `, "${element.technology.replace(/"/g, '\\"')}"` : ""
+      elementPositions[element.id] = { x, y }
 
-      switch (element.type) {
-        case "person":
-          plantuml += `Person(${cleanId}, "${cleanName}", "${cleanDesc}")
-`
-          break
-        case "system":
-          plantuml += `System(${cleanId}, "${cleanName}", "${cleanDesc}"${tech})
-`
-          break
-        case "container":
-          plantuml += `Container(${cleanId}, "${cleanName}", "${cleanDesc}"${tech})
-`
-          break
-        case "component":
-          plantuml += `Component(${cleanId}, "${cleanName}", "${cleanDesc}"${tech})
-`
-          break
-        default:
-          plantuml += `System(${cleanId}, "${cleanName}", "${cleanDesc}"${tech})
-`
+      const elementType = element.type || "system"
+      const color = colors[elementType as keyof typeof colors] || colors.system
+
+      // Draw element box
+      svg += `
+        <rect x="${x}" y="${y}" width="${boxWidth}" height="${boxHeight}" 
+              fill="${color.bg}" stroke="${color.border}" class="element-box" rx="8" />
+        
+        <!-- Element name -->
+        <text x="${x + boxWidth / 2}" y="${y + 30}" class="element-text" 
+              fill="${color.text}" fontSize="14" fontWeight="bold">
+          ${element.name}
+        </text>
+        
+        <!-- Element description -->
+        <text x="${x + boxWidth / 2}" y="${y + 50}" class="element-text" 
+              fill="${color.text}" fontSize="11">
+          ${element.description}
+        </text>
+        
+        <!-- Element technology -->
+        ${
+          element.technology
+            ? `
+          <text x="${x + boxWidth / 2}" y="${y + 70}" class="element-text" 
+                fill="${color.text}" fontSize="10" opacity="0.8">
+            ${element.technology}
+          </text>
+        `
+            : ""
+        }
+      `
+    })
+
+    // Draw relationships
+    relationships.forEach((rel: any) => {
+      const fromPos = elementPositions[rel.from]
+      const toPos = elementPositions[rel.to]
+
+      if (fromPos && toPos) {
+        // Calculate connection points (center of boxes)
+        const fromX = fromPos.x + boxWidth / 2
+        const fromY = fromPos.y + boxHeight / 2
+        const toX = toPos.x + boxWidth / 2
+        const toY = toPos.y + boxHeight / 2
+
+        // Calculate midpoint for label
+        const midX = (fromX + toX) / 2
+        const midY = (fromY + toY) / 2
+
+        svg += `
+          <line x1="${fromX}" y1="${fromY}" x2="${toX}" y2="${toY}" class="relationship-line" />
+          <text x="${midX}" y="${midY - 5}" class="relationship-text">
+            ${rel.description}
+          </text>
+        `
       }
     })
 
-    plantuml += "\n"
-
-    // Add relationships
-    model.relationships.forEach((rel: any) => {
-      const cleanFrom = rel.from.replace(/[^a-zA-Z0-9]/g, "_")
-      const cleanTo = rel.to.replace(/[^a-zA-Z0-9]/g, "_")
-      const cleanDesc = rel.description.replace(/"/g, '\\"')
-      const tech = rel.technology ? `, "${rel.technology.replace(/"/g, '\\"')}"` : ""
-
-      plantuml += `Rel(${cleanFrom}, ${cleanTo}, "${cleanDesc}"${tech})
-`
-    })
-
-    plantuml += "\n@enduml"
-
-    return plantuml
-  }
-
-  const encodePlantUML = (plantuml: string): string => {
-    // The PlantUML server supports both compressed and plain text formats
-    // Using plain text format eliminates encoding issues
-    return "~1" + encodeURIComponent(plantuml)
+    svg += "</svg>"
+    return svg
   }
 
   const handleRefresh = () => {
@@ -175,7 +205,15 @@ title ${model.title} - ${levelTitles[model.level as keyof typeof levelTitles]} D
   }
 
   const handleDownloadPDF = async () => {
-    if (!diagramRef.current || !currentModel) return
+    if (!diagramRef.current) {
+      console.error("[v0] Diagram ref not available for PDF generation")
+      return
+    }
+
+    if (!currentModel) {
+      console.error("[v0] No current model for PDF generation")
+      return
+    }
 
     setIsGeneratingPDF(true)
     try {
@@ -185,9 +223,9 @@ title ${model.title} - ${levelTitles[model.level as keyof typeof levelTitles]} D
 
       // Get the diagram container
       const diagramElement = diagramRef.current
-      const imgElement = diagramElement.querySelector("img")
+      const svgElement = diagramElement.querySelector("svg")
 
-      if (!imgElement) {
+      if (!svgElement) {
         throw new Error("No diagram found to export")
       }
 
@@ -197,7 +235,7 @@ title ${model.title} - ${levelTitles[model.level as keyof typeof levelTitles]} D
       tempContainer.style.position = "absolute"
       tempContainer.style.left = "-9999px"
       tempContainer.style.top = "0"
-      tempContainer.appendChild(imgElement.cloneNode(true))
+      tempContainer.appendChild(svgElement.cloneNode(true))
       document.body.appendChild(tempContainer)
 
       const canvas = await html2canvas(tempContainer, {

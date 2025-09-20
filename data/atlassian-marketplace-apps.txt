@@ -1,0 +1,497 @@
+Embedded Addons Name	 Embedded Addons Key	 Embedded Addons Tagline	 Embedded Addons Summary
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+GitHub for Atlassian	com.github.integration.production	Streamline development workflows across GitHub, Jira, and your Atlassian apps having unified data with one, Atlassian-powered app	Streamline development workflows across GitHub, Jira, and your Atlassian apps having unified data with one, Atlassian-powered app
+			
+			
+			
+			
+Figma for Jira	com.figma.jira-add-on	Get full context when turning designs to code with Jira and Figma	Add Figma designs to Jira issues and get all the context you need in one place when going from designs to code.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+ScriptRunner for Jira	com.onresolve.jira.groovy.groovyrunner	The must-have app for Jira admins of every technical background: the ultimate toolkit for unlimited automation and customisation	ScriptRunner is the top scripting, automation and customisation app: Automate workflows, build custom fields and integrations with Groovy scripts and enhanced JQL. Execute admin and workflow functions without having to write a complete add-on.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Checklists for Jira (Free) by HeroCoders	com.herocoders.plugins.jira.issuechecklist-free	The Smarter Checklists app that outperforms action items or subtasks: Add list and list templates to Jira issues with one click	Better than subtasks or action items, Checklists empower you to create ToDo lists, Definition of Done, Acceptance Criteria, and QA lists on Jira issues. Integrate checklists with Jira automation, JQL, workflow validators and post functions.
+			
+			
+			
+			
+			
+			
+			
+			
+GitLab for Jira Cloud	gitlab-jira-connect-gitlab.com	View GitLab activity from Jira Cloud	Integrates with Gitlab to display commits, branches and merge requests that reference a Jira Issue into the Development Panel.
+			
+			
+			
+			
+			
+			
+			
+			
+Xray Test Management for Jira	com.xpandit.plugins.xray	Native Test Management. Built for every member of your team to plan, test, track and release great software	Xray is a Jira App for managing quality assurance tests which integrates seamlessly with Jira. Xray supports manual and automated tests and provides reports to track test coverage of your Jira projects. Xray includes a  RESTful API out of the box.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Timesheets by Tempo - Jira Time Tracking	is.origo.jira.tempo-plugin	Tempo Timesheets: #1 AI Jira Time Tracking App for Project Management & Billing with Google, Slack & Outlook Integration	Tempo creates embedded solutions that enable organizations, including some of the world’s most prestigious brands, to track, plan, manage and understand time, their most constrained resource.
+			
+			
+			
+			
+Microsoft Teams for Jira Data Center	microsoft-teams	Jira Data Center integration for Microsoft Teams	Let your team discuss and collaborate over the backlog just inside Microsoft Teams.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Zephyr - Test Management and Automation for Jira	com.kanoah.test-manager	Manage and automate tests without leaving Jira to ship quality software, faster	Manage, reuse, and automate tests across projects—all inside Jira. Align teams and catch defects quickly with AI-powered, no-code automation. Gain full visibility with seamless test execution, cross-project sharing, and built-in reporting.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Tempo Core | Project Tracking for Jira	io.tempo.jira	Enable project tracking with Tempo apps for time tracking, capacity planning, and financial management	Tempo Base Plugin used by all Tempo Cloud products of Timesheets, Capacity Planner, and Financial Manager
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Jira Misc Workflow Extensions (JMWE)	com.innovalog.jmwe.jira-misc-workflow-extensions	Powerful, all-in-one Jira automation app to customize and expand your workflows	All-in-one app for Jira workflow automation. Top-selling & top-rated. Easily configure Jira workflows with an unmatched collection of point-and-click post functions, conditions and validators, or do almost anything with simple yet powerful scripting.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Timesheet Tracking for Jira	com.tda.timesheet.report	A Bestselling Time Tracker App: Effortlessly Streamline Your Time Workflow and Advanced Reporting Capabilities	Powerful tool to help you and your team manage time more efficiently and effectively. With this plugin, you can easily track time spent on specific tasks, projects, or even across your entire organization.
+			
+			
+			
+			
+			
+			
+			
+			
+Zephyr Essential - Test Management for Jira	com.thed.zephyr.je	Simplify your testing with the essential tools to manage, track, and report on your tests inside of Jira	Manage, track, and report on tests seamlessly in Jira. Gain end-to-end traceability, streamline workflows, access built-in reporting, and execute tests effortlessly across projects—keeping your team aligned and accelerating release cycles.
+			
+			
+			
+			
+			
+			
+Sentry for Jira	sentry.io.jira	Capture your application errors with Sentry. Sync, triage and track those issues with Jira	Installing this integration will allow you to create Jira issues from Sentry, as well as sync seamlessly between Jira and Sentry. When you delegate an issue to an assignee or update a status on Jira, the updates will also populate in Sentry.
+			
+			
+			
+			
+Zendesk Support for Jira	zendesk_for_jira	Create a seamless workflow between Zendesk Support tickets and Jira issues and unite your support and engineering teams	With Zendesk Support for Jira, your support and engineering teams will always be on the same page whenever a development issue arises. Easily escalate and link tickets to a Jira issue so critical info is communicated and collaboration is effortless.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Structure by Tempo - Jira Portfolio Management PPM	com.almworks.jira.structure	Jira Project Portfolio Management (PPM): Manage projects & team capacity in excel spreadsheet-like tables with advanced hierarchy	Portfolio & project management solution to view your work across any Jira projects and teams, all in one place.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+JSU Automation Suite for Jira Workflows	com.googlecode.jira-suite-utilities	The easiest entry point to code-free Jira workflow automation. Quick, intuitive setup for immediate results—for any skill level	Automations, additional workflow conditions, validators and post functions. Bulk copy, a transition summary tab & map custom fields
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+BigPicture - Portfolio & Resource Management for Jira	eu.softwareplant.bigpicture	Flexible Jira project portfolio management (PPM) with advanced Gantt chart & resource management for Agile, Hybrid & Classic teams	Learn more at www.bigpicture.one ## BigPicture introduces Project Portfolio Management to Jira. Manage your backlog at the enterprise level. Add Gantt charts, agile roadmaps, resources, and risks to your Jira.  Now SAFe® compliant.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Deep Clone for Jira	com.codefortynine.deep-clone-for-jira	Clone projects, bulk clone issues & copy epics. Duplicate project templates & recurring tasks. Migrate projects between instances	Clone projects, issues & epics. Copy project templates & recurring tasks. Migrate issues & projects between instances. Bulk Clone. Advanced Clone Options. Advanced Project Clone.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Miro for Jira Cloud	com.realtimeboard.jira.addon.public	Contextualize Jira issues with information, background, and details - with Miro content embedded directly into the issue	Contextualize Jira issues with project details & background information, with attached Miro boards. Add boards relevant to a specific project or task and share it with the relevant stakeholders.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+eazyBI Reports and Charts for Jira	com.eazybi.jira.plugins.eazybi-jira	Leading reports, charts, and dashboards app for Jira. Scalable, Powerful, Enterprise-Ready. Complete Analytics Solution	A powerful and flexible Business Intelligence app integrated seamlessly into Jira. From simple reports to advanced data analysis. Enterprise-ready, scalable, and secure – adapts to growing reporting needs for organizations of all sizes.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+TestRail Test Management Integration for Jira	com.testrail.jira.testrail-plugin	Increase visibility between QA and Development—ensure everything that should be tested, gets tested, every time	Orchestrate testing, elevate quality—with TestRail, the standard in test management. Integrate TestRail with Jira Cloud, Server, or Data Center to link test cases, plans, and results. Automatically push new defects to Jira and report on traceability.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Time Tracker for Jira Cloud & DC	jira-timesheet-plugin	Tempo Time Tracking: Integrate Agile Jira Time Tracking, Invoicing, & Reporting into Your Workflow	Extend the value of time tracking (both Jira and Tempo) with a lightweight timesheet reporting app. Visualize every aspect of your project flow and progress to better understand capacity and streamline invoicing.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Power BI Connector for Jira	com.alphaserve.powerbi-connector-jira	No-code Power BI Jira integration. Connect Jira to Power BI and build custom Jira reports easily. Use free dashboard templates	No-code Power BI Jira integration. Connect Jira to Power BI and build custom Jira reports easily. Use built-in Power BI templates for a quick start. Create multiple data sources and secure them with permission settings.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Capacity Planner - Jira Team & Resource Management | Tempo	com.tempoplugin.tempo-planner	#1 Jira Resource Management App: Optimize team allocation & utilization, agile sprints, capacity planning & project management	Industry professionals leverage Tempo Planner as a centralized workspace to plan current and future work. With Tempo Planner, customers are able to allocate resources towards high-impact initiatives, while ensuring their team's workload is realistic.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Clockify: Time Tracking & Timesheet	clockify-timesheets-time-tracking-reports	FREE time tracker and timesheet plugin for Jira	Track time on Jira issues using a timer or log time manually, and later run reports on your team's timesheets.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Reports - Charts and Graphs for Jira Dashboard Free	io.bloompeak.jira-reports-free	Generate simple yet flexible and custom charts, graphs and reports to summarize and visualize your data on your Jira dashboards	"Generate simple yet flexible and custom charts, graphs and reports to summarize and visualize your data on your Jira dashboards
+Create custom bar charts and table views
+No need for coding, a user friendly, easily understandable and colorful view"
+			
+			
+			
+			
+			
+			
+draw.io Diagrams for Jira	com.mxgraph.jira.plugins.drawio	Create powerful, easy-to-use and secure diagrams. Top rated Jira diagramming solution since 2013	Create powerful, easy-to-use and secure diagrams. Top rated Jira diagramming solution since 2013
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Git Integration for Jira (Azure DevOps, GitHub, GitLab)	com.xiplink.jira.git.jira_git_plugin	Azure DevOps, GitHub, GitLab integration. Integrate any Git repository and improve dev visibility	View Git commits, branches, tags, and pull requests in Jira Issues and Projects + Code Review in Jira. Integrates with GitLab, GitHub, Bitbucket, AWS CodeCommit, Azure DevOps Repos, and any other Git repository.
+			
+			
+			
+			
+Snyk Security in Jira Cloud	snyk.in.jira	Great teams collaborate to stay secure	Reduce risk at scale with a native Snyk integration for Jira Software that enables security and development teams to proactively collaborate on security issues.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Status Time Reports Free - Time in Status	io.bloompeak.status-time-free	Limited but free version of Status Time Reports app. Generate various time in status/assignee, cycle time and lead time reports	Find out how much time has been spent on a status with this high performance status time reporting app.  It is a rate-limited version of <a href='https://marketplace.atlassian.com/apps/1221826/status-time'>Status Time</a>.
+			
+			
+			
+			
+Google Chat for Jira Cloud	linovi-hangoutschat-bot	Receive Google Chat notifications from Jira Cloud	Receive Google Chat notifications from Jira Cloud
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Custom Charts for Jira -Reports, Dashboards, Graphs & Tables	com.oldstreetsolutions.atlassian.jira.custom-charts	Easily create comprehensive charts, graphs, filters & reports for your Jira Dashboards & Analytics, and Track Time in Status	Build JSM and Jira Reporting Dashboards in seconds using pre-built chart templates, 10+ chart types and custom options like JQL or Saved Filters. Report on Issue History, Time in Status, Request Type, Story Points, Assignees, 3rd party apps and more.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Checklists for Jira (Pro) by HeroCoders	com.gebsun.plugins.jira.issuechecklist	Jira checklists for Definition of Done, Acceptance Criteria, and ToDo lists. The smart checklist solution to automate action items	Better than subtasks or action items, Checklists empower you to create ToDo lists, Definition of Done, Acceptance Criteria, and QA lists on Jira issues. Integrate checklists with Jira automation, JQL, workflow validators and post functions.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Rich Filters for Jira Dashboards	com.qotilabs.jira.rich-filters-plugin	Dynamic and interactive dashboards, gadgets & real-time reports for Jira	Build powerful interactive Jira dashboards in minutes. The Rich Filters Gadgets will transform your dashboards from static to truly dynamic and interactive operational boards. Let the users find what they need in just a few clicks!
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Clockwork Lite Time Tracker - Time Tracking and Timesheets	clockwork-free-cloud	Simple, low cost Jira time tracker. Automatic time tracking, timers and manual worklogs. Timesheets	Clockwork Lite Time Tracker - Simple, low cost Jira time tracker for teams with basic requirements. Automatic time tracking, timers and manual worklogs. Timesheet reports
+			
+			
+			
+			
+			
+			
+Lucidchart Diagrams Connector for Jira	com.lucidchart.jira.plugins.lucid-jira	Try the most collaborative diagramming solution for Jira. More than 15 million users choose Lucidchart	Draw and publish diagrams, flowcharts, mind maps, mockups & wireframes. Lucidchart offers top Visio import/export, real-time collaboration & free integrations (Confluence, Jira, Google, Office & more). 15M+ users diagram with Lucidchart.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Microsoft 365 for Jira (Outlook Email, Teams, Calendar)	com.yasoon.jira.cloud	Connect Jira & JSM with Microsoft Teams, Outlook email, and calendar – full Microsoft 365 integration where work happens	Integrate Microsoft Teams, Outlook email and calendars with Jira. Improve your team work, ITSM and ESM helpdesk. Your complete integration for Jira and Microsoft 365.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Behaviours - ScriptRunner for Jira Cloud	com.adaptavist.jira.scriptrunner.behaviours	Gain Control over Fields, Extend Standard Configurations and Customise how Fields Behave	Gain control over fields and extend the standard field configurations with Behaviours, a ScriptRunner for Jira Cloud feature. Boost your Jira customisation power and conditionally change how fields behave when creating a new issue.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Jenkins for Jira (Official)	com.atlassian.jenkins-for-jira	Connect your Jenkins server to Jira Software Cloud for more visibility into your development pipeline	Connect your Jenkins server to Jira Software Cloud for more visibility into your development pipeline.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+BigGantt - Gantt Chart for Jira	eu.softwareplant.biggantt	Visualize, plan, and manage Jira issues on neat Gantt charts. Allocate resources, track performance, get work done	Order Training at training@softwareplant.com ## Use BigGantt to manage the Work Breakdown Structure of your portfolio. Filter data, use milestones, markers, critical path, and resource management. Track time and progress. Customize views.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Gantt Charts for Structure PPM - Jira Roadmaps | Tempo	com.almworks.structure.gantt	Visualize Structure custom hierarchies, roadmap, project plan, timeline, dependencies, calendar & progress in Jira Gantt Charts	"Simplify Jira project management with a Gantt chart extension for Structure. This easy-to-use roadmap solution works with your Jira data as is. Plan, track, and adjust with ease.
+
+IMPORTANT: Requires Structure 7.4 or above to be installed first."
+			
+			
+			
+			
+Rich Text Gadget for Jira	rich-text-gadget	Give context to your Jira dashboards	Jira dashboards can end up a confusing mix of graphs, charts and tables.  Place rich text on your dashboard to provide additional information and clarity to users.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+WBS Gantt-Chart for Jira (Enterprise Project Management)	jp.ricksoft.plugins.wbsgantt-for-jira	Visualize your plan and timeline with the structured Jira Gantt chart plugin along with roadmap designed for project management	Become a project management master with easy to use Jira Gantt charts. Visualize projects, build workflows, assign tasks, plan resource allocation and track your progress. Turn Jira into a powerful and affordable alternative to Microsoft Project!
+			
+			
+			
+			
+			
+			
+Extension for Jira Service Management	com.intenso.jira.plugins.jsd-extender	Make sure your request forms include all the information agents need to assist customers better	Extension for Jira Service Management improves the Customer Portal with dynamic forms, bundled fields, and extra request details. It reduces clutter, ensures accurate data collection, and helps agents resolve issues faster.
+			
+			
+			
+			
+			
+			
+Jira Calendar Plugin	com.atlassian.jira.ext.calendar	The Jira Calendar Plugin shows issues and versions in a calendar format based on their due date	"The Jira Calendar Plugin shows issues and versions in a calendar format
+based on their due date. Calendars can be based on a filter or on a
+project."
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Email This Issue	com.metainf.jira.plugin.emailissue	Mail collaboration and email service desk made easy - send and receive e-mails and notifications, with support for external users	"Mail collaboration made easy - send and receive e-mails with support for external users
+
+Send issues in emails to Jira or non-Jira recipients.  Custom templates, event notifications and more. Receive emails with amazing features Jira does not have."
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Portfolio by HeroCoders (Structure PPM for Jira & Capacity)	com.herocoders.plugins.jira.epicsmap	Jira Project Portfolio Management & Capacity Planner & Structure Gantt - end-to-end solution for Advanced Project Management	Jira Project Portfolio Management: Get a 360 view of your most complex portfolios with this end to end PPM solution and a built-in Capacity Planner.
+			
+			
+			
+			
+			
+			
+			
+			
+Charting for Jira	com.atlassian.jira.ext.charting	A plugin providing various charts and reports for Jira	A plugin providing various charts and reports for Jira.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+Time in Status	time-in-status-report	🏅 Get Jira Time in Status Reports, Assignee Time, Average Time. Status Group: Lead Time, Cycle Time. Dashboards. Sprint Velocity	Jira productivity reports: time in status, cycle time, lead time and transitions between statuses, sprint performance report

@@ -70,6 +70,7 @@ export function ExportPanel({ selectedComponents, selectedIntegrations, config }
       component: "C4_Component.puml",
       code: "C4_Component.puml",
       landscape: "C4_Landscape.puml",
+      plugin: "C4_Component.puml", // Added plugin mapping
     }
 
     let puml = `@startuml
@@ -205,6 +206,7 @@ graph TD
       container: "Container",
       component: "Component",
       landscape: "System",
+      plugin: "Component", // Added plugin type mapping
     }
     return typeMap[type as keyof typeof typeMap] || "Container"
   }
@@ -216,6 +218,7 @@ graph TD
       container: `(${type})`,
       component: `{${type}}`,
       landscape: `[${type}]`,
+      plugin: `{${type}}`, // Added plugin shape mapping
     }
     return shapeMap[type as keyof typeof shapeMap] || `[${type}]`
   }
@@ -487,6 +490,7 @@ graph TD
                   <SelectItem value="container">Level 2: Container</SelectItem>
                   <SelectItem value="component">Level 3: Component</SelectItem>
                   <SelectItem value="code">Level 4: Code</SelectItem>
+                  <SelectItem value="plugin">Plugin Ecosystem</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -685,7 +689,9 @@ graph TD
                     <li>• Mermaid diagrams render locally and can be exported as SVG images</li>
                     <li>• Export as PDF to get a high-quality document with embedded diagrams</li>
                     {generateAllLevels && (
-                      <li>• "All Levels" generates Landscape, Context, Container, Component, and Code diagrams</li>
+                      <li>
+                        • "All Levels" generates Landscape, Context, Container, Component, Code, and Plugin diagrams
+                      </li>
                     )}
                   </ul>
                 </div>

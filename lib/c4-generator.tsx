@@ -23,7 +23,7 @@ export interface C4Model {
   description?: string
   elements: C4Element[]
   relationships: C4Relationship[]
-  level: "context" | "container" | "component" | "code" | "landscape"
+  level: "context" | "container" | "component" | "code" | "landscape" | "plugin" // Added plugin level
 }
 
 export interface MultiLevelC4Model {
@@ -32,6 +32,7 @@ export interface MultiLevelC4Model {
   container: C4Model
   component: C4Model
   code: C4Model
+  plugin: C4Model // Added plugin diagram
 }
 
 export class C4ModelGenerator {
@@ -68,6 +69,7 @@ export class C4ModelGenerator {
       container: "C4_Container.puml",
       component: "C4_Component.puml",
       code: "C4_Component.puml",
+      plugin: "C4_Component.puml", // Added plugin mapping
     }
 
     let puml = `@startuml
@@ -263,6 +265,7 @@ export class MultiLevelC4Generator {
       container: this.generateContainerDiagram(),
       component: this.generateComponentDiagram(),
       code: this.generateCodeDiagram(),
+      plugin: this.generatePluginDiagram(), // Added plugin diagram generation
     }
   }
 
@@ -713,6 +716,136 @@ export class MultiLevelC4Generator {
     return generator.getModel()
   }
 
+  private generatePluginDiagram(): C4Model {
+    const generator = new C4ModelGenerator(`${this.baseTitle} - Plugin Ecosystem`, "plugin")
+
+    // Add Atlassian core products as systems
+    this.selectedComponents.forEach((componentId) => {
+      const component = getAtlassianComponent(componentId)
+      if (component) {
+        generator.addElement({
+          id: componentId,
+          name: component.name,
+          type: "system",
+          description: component.description,
+          technology: "Atlassian Cloud",
+          tags: ["atlassian-core"],
+        })
+      }
+    })
+
+    // Add Atlassian Marketplace as a system
+    generator.addElement({
+      id: "atlassian_marketplace",
+      name: "Atlassian Marketplace",
+      type: "system",
+      description: "Third-party app and plugin ecosystem for Atlassian products",
+      technology: "Cloud Platform",
+      tags: ["marketplace"],
+    })
+
+    // Add plugin categories as containers within the marketplace
+    const pluginCategories = [
+      { id: "testing_qa", name: "Testing & QA", description: "Test management and quality assurance plugins" },
+      { id: "time_tracking", name: "Time Tracking", description: "Time tracking and timesheet plugins" },
+      { id: "reporting", name: "Reporting & Analytics", description: "Reporting, charts, and analytics plugins" },
+      { id: "development", name: "Development & CI/CD", description: "Development tools and CI/CD integrations" },
+      { id: "workflow", name: "Workflow & Automation", description: "Workflow automation and scripting plugins" },
+      {
+        id: "project_mgmt",
+        name: "Project Management",
+        description: "Project portfolio and resource management plugins",
+      },
+      { id: "integration", name: "Integration & Connectivity", description: "Third-party system integrations" },
+      { id: "visualization", name: "Visualization", description: "Diagramming and visualization tools" },
+      { id: "security", name: "Security & Access", description: "Security and access control plugins" },
+      { id: "communication", name: "Communication", description: "Communication and collaboration plugins" },
+    ]
+
+    pluginCategories.forEach((category) => {
+      generator.addElement({
+        id: category.id,
+        name: category.name,
+        type: "container",
+        description: category.description,
+        technology: "Plugin Category",
+        tags: ["plugin-category"],
+        parent: "atlassian_marketplace",
+      })
+
+      // Connect plugin categories to relevant Atlassian products
+      this.selectedComponents.forEach((componentId) => {
+        if (this.isPluginRelevantToComponent(category.id, componentId)) {
+          generator.addRelationship({
+            from: category.id,
+            to: componentId,
+            description: "Extends functionality of",
+            technology: "Atlassian Connect/Forge",
+          })
+        }
+      })
+    })
+
+    // Add specific popular plugins as components
+    const popularPlugins = this.getPopularPluginsForComponents()
+    popularPlugins.forEach((plugin) => {
+      generator.addElement({
+        id: plugin.id,
+        name: plugin.name,
+        type: "component",
+        description: plugin.description,
+        technology: plugin.technology,
+        tags: ["popular-plugin"],
+        parent: plugin.category,
+      })
+
+      // Connect plugins to their target Atlassian products
+      plugin.targetProducts.forEach((productId) => {
+        if (this.selectedComponents.includes(productId)) {
+          generator.addRelationship({
+            from: plugin.id,
+            to: productId,
+            description: plugin.integrationDescription,
+            technology: plugin.integrationTechnology,
+          })
+        }
+      })
+    })
+
+    // Add business functions as external systems
+    const businessFunctions = [
+      { id: "quality_assurance", name: "Quality Assurance", description: "Testing and quality management processes" },
+      { id: "resource_management", name: "Resource Management", description: "Time tracking and resource allocation" },
+      { id: "business_intelligence", name: "Business Intelligence", description: "Reporting and analytics processes" },
+      { id: "software_development", name: "Software Development", description: "Development lifecycle management" },
+      { id: "process_optimization", name: "Process Optimization", description: "Workflow and automation processes" },
+      { id: "project_delivery", name: "Project Delivery", description: "Project management and delivery processes" },
+    ]
+
+    businessFunctions.forEach((func) => {
+      generator.addElement({
+        id: func.id,
+        name: func.name,
+        type: "system",
+        description: func.description,
+        tags: ["business-function"],
+      })
+
+      // Connect business functions to relevant plugin categories
+      const relevantCategories = this.getRelevantCategoriesForBusinessFunction(func.id)
+      relevantCategories.forEach((categoryId) => {
+        generator.addRelationship({
+          from: categoryId,
+          to: func.id,
+          description: "Supports",
+          technology: "Business Process",
+        })
+      })
+    })
+
+    return generator.getModel()
+  }
+
   private getComponentBreakdown(
     componentId: string,
   ): Record<string, { name: string; description: string; technology: string }> {
@@ -822,6 +955,99 @@ export class MultiLevelC4Generator {
       this.selectedIntegrations.some((id) => ["jenkins", "github", "bitbucket", "azure"].includes(id)) ||
       this.selectedComponents.includes("bitbucket")
     )
+  }
+
+  private isPluginRelevantToComponent(categoryId: string, componentId: string): boolean {
+    const relevanceMap: Record<string, string[]> = {
+      testing_qa: ["jira-software", "jira-service-management"],
+      time_tracking: ["jira-software", "jira-work-management"],
+      reporting: ["jira-software", "jira-service-management", "confluence"],
+      development: ["jira-software", "bitbucket"],
+      workflow: ["jira-software", "jira-service-management"],
+      project_mgmt: ["jira-software", "jira-work-management", "jira-align"],
+      integration: ["jira-software", "jira-service-management", "confluence"],
+      visualization: ["confluence", "jira-software"],
+      security: ["jira-software", "jira-service-management", "confluence"],
+      communication: ["jira-software", "jira-service-management", "confluence"],
+    }
+    return relevanceMap[categoryId]?.includes(componentId) || false
+  }
+
+  private getPopularPluginsForComponents() {
+    return [
+      {
+        id: "scriptrunner",
+        name: "ScriptRunner for Jira",
+        description: "Automation and customization toolkit",
+        technology: "Groovy/Java",
+        category: "workflow",
+        targetProducts: ["jira-software", "jira-service-management"],
+        integrationDescription: "Provides workflow automation and custom fields",
+        integrationTechnology: "Atlassian Connect",
+      },
+      {
+        id: "xray",
+        name: "Xray Test Management",
+        description: "Native test management solution",
+        technology: "Test Framework",
+        category: "testing_qa",
+        targetProducts: ["jira-software"],
+        integrationDescription: "Integrates test cases and execution with issues",
+        integrationTechnology: "Atlassian Connect",
+      },
+      {
+        id: "tempo_timesheets",
+        name: "Tempo Timesheets",
+        description: "AI-powered time tracking",
+        technology: "Time Tracking",
+        category: "time_tracking",
+        targetProducts: ["jira-software"],
+        integrationDescription: "Tracks time against issues and projects",
+        integrationTechnology: "Atlassian Connect",
+      },
+      {
+        id: "structure",
+        name: "Structure by Tempo",
+        description: "Portfolio management solution",
+        technology: "PPM Platform",
+        category: "project_mgmt",
+        targetProducts: ["jira-software"],
+        integrationDescription: "Provides hierarchical project views",
+        integrationTechnology: "Atlassian Connect",
+      },
+      {
+        id: "eazybi",
+        name: "eazyBI Reports",
+        description: "Business intelligence and reporting",
+        technology: "BI Platform",
+        category: "reporting",
+        targetProducts: ["jira-software", "jira-service-management"],
+        integrationDescription: "Creates advanced reports and dashboards",
+        integrationTechnology: "REST API",
+      },
+      {
+        id: "github_integration",
+        name: "GitHub for Atlassian",
+        description: "Development workflow integration",
+        technology: "Git Integration",
+        category: "development",
+        targetProducts: ["jira-software"],
+        integrationDescription: "Links commits and PRs to issues",
+        integrationTechnology: "Webhooks/REST API",
+      },
+    ]
+  }
+
+  private getRelevantCategoriesForBusinessFunction(functionId: string): string[] {
+    const functionMap: Record<string, string[]> = {
+      quality_assurance: ["testing_qa"],
+      resource_management: ["time_tracking", "project_mgmt"],
+      business_intelligence: ["reporting"],
+      software_development: ["development", "workflow"],
+      process_optimization: ["workflow", "integration"],
+      project_delivery: ["project_mgmt", "reporting"],
+    }
+    return functionMap[functionId] || []
   }
 }
 

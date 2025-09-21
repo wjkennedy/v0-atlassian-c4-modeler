@@ -12,6 +12,7 @@ import { ConfigurationPanel } from "@/components/configuration-panel"
 import { ExportPanel } from "@/components/export-panel"
 import { SettingsModal } from "@/components/settings-modal"
 import { PluginAsComponents } from "@/components/plugin-as-components"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { Building2, Network, Settings, Download, Eye, Layers, Package } from "lucide-react"
 
 export default function C4GeneratorPage() {
@@ -37,21 +38,28 @@ export default function C4GeneratorPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
+      <header className="border-b bg-card/80 backdrop-blur-md sticky top-0 z-50 softpop-shadow">
+        <div className="container mx-auto px-6 py-5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Building2 className="h-6 w-6 text-primary" />
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl softpop-shadow">
+                <Building2 className="h-7 w-7 text-primary" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold text-foreground">C4 Model Generator</h1>
-                <p className="text-sm text-muted-foreground">Atlassian Solution Partners</p>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  C4 Model Generator
+                </h1>
+                <p className="text-sm text-muted-foreground font-medium">Atlassian Solution Partners</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => setSettingsOpen(true)}>
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSettingsOpen(true)}
+                className="softpop-button border-primary/20 hover:border-primary/40"
+              >
                 <Settings className="h-4 w-4 mr-2" />
                 Settings
               </Button>
@@ -60,41 +68,83 @@ export default function C4GeneratorPage() {
         </div>
       </header>
 
+      <section className="border-b bg-gradient-to-br from-card/50 to-muted/30 backdrop-blur-sm">
+        <div className="container mx-auto px-6 py-8">
+          <Card className="softpop-card softpop-shadow border-primary/10">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-3 text-xl">
+                <div className="p-2 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg">
+                  <Eye className="h-5 w-5 text-primary" />
+                </div>
+                Live Preview
+              </CardTitle>
+              <CardDescription className="text-base">
+                Real-time C4 diagram preview with Softpop aesthetics
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DiagramPreview
+                components={selectedComponents}
+                integrations={selectedIntegrations}
+                plugins={selectedPlugins}
+                config={diagramConfig}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Panel - Configuration */}
-          <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Layers className="h-5 w-5 text-primary" />
+      <main className="container mx-auto px-6 py-10">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+          <div className="xl:col-span-3 space-y-8">
+            <Card className="softpop-card softpop-shadow border-primary/10">
+              <CardHeader className="pb-6">
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="p-2 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg">
+                    <Layers className="h-5 w-5 text-primary" />
+                  </div>
                   Architecture Configuration
                 </CardTitle>
-                <CardDescription>
-                  Configure your Atlassian Cloud architecture components and integrations
+                <CardDescription className="text-base">
+                  Configure your Atlassian Cloud architecture with beautiful Softpop design
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="components" className="w-full">
-                  <TabsList className="grid w-full grid-cols-5">
-                    <TabsTrigger value="components" className="flex items-center gap-2">
+                  <TabsList className="grid w-full grid-cols-5 bg-muted/50 p-1 rounded-xl">
+                    <TabsTrigger
+                      value="components"
+                      className="flex items-center gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                    >
                       <Building2 className="h-4 w-4" />
                       Components
                     </TabsTrigger>
-                    <TabsTrigger value="integrations" className="flex items-center gap-2">
+                    <TabsTrigger
+                      value="integrations"
+                      className="flex items-center gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                    >
                       <Network className="h-4 w-4" />
                       Integrations
                     </TabsTrigger>
-                    <TabsTrigger value="plugins" className="flex items-center gap-2">
+                    <TabsTrigger
+                      value="plugins"
+                      className="flex items-center gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                    >
                       <Package className="h-4 w-4" />
                       Plugins
                     </TabsTrigger>
-                    <TabsTrigger value="config" className="flex items-center gap-2">
+                    <TabsTrigger
+                      value="config"
+                      className="flex items-center gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                    >
                       <Settings className="h-4 w-4" />
                       Configuration
                     </TabsTrigger>
-                    <TabsTrigger value="export" className="flex items-center gap-2">
+                    <TabsTrigger
+                      value="export"
+                      className="flex items-center gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                    >
                       <Download className="h-4 w-4" />
                       Export
                     </TabsTrigger>
@@ -141,60 +191,52 @@ export default function C4GeneratorPage() {
             </Card>
           </div>
 
-          {/* Right Panel - Preview */}
           <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Eye className="h-5 w-5 text-primary" />
-                  Live Preview
+            <Card className="softpop-card softpop-shadow border-primary/10">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  Architecture Summary
                 </CardTitle>
-                <CardDescription>Real-time C4 diagram preview</CardDescription>
               </CardHeader>
-              <CardContent>
-                <DiagramPreview
-                  components={selectedComponents}
-                  integrations={selectedIntegrations}
-                  plugins={selectedPlugins}
-                  config={diagramConfig}
-                />
-              </CardContent>
-            </Card>
-
-            {/* Quick Stats */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm font-medium">Architecture Summary</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Components</span>
-                  <Badge variant="outline">{selectedComponents.length}</Badge>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-r from-muted/50 to-accent/10">
+                  <span className="text-sm font-medium text-muted-foreground">Components</span>
+                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                    {selectedComponents.length}
+                  </Badge>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Integrations</span>
-                  <Badge variant="outline">{selectedIntegrations.length}</Badge>
+                <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-r from-muted/50 to-secondary/10">
+                  <span className="text-sm font-medium text-muted-foreground">Integrations</span>
+                  <Badge variant="outline" className="bg-secondary/10 text-secondary-foreground border-secondary/20">
+                    {selectedIntegrations.length}
+                  </Badge>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Plugins</span>
-                  <Badge variant="outline">{selectedPlugins.length}</Badge>
+                <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-r from-muted/50 to-accent/10">
+                  <span className="text-sm font-medium text-muted-foreground">Plugins</span>
+                  <Badge variant="outline" className="bg-accent/10 text-accent-foreground border-accent/20">
+                    {selectedPlugins.length}
+                  </Badge>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Diagram Level</span>
-                  <Badge variant="secondary" className="capitalize">
+                <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-r from-muted/50 to-primary/10">
+                  <span className="text-sm font-medium text-muted-foreground">Diagram Level</span>
+                  <Badge variant="secondary" className="capitalize bg-primary/20 text-primary">
                     {diagramConfig.level}
                   </Badge>
                 </div>
                 {customComponents.length > 0 && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Custom Components</span>
-                    <Badge variant="outline">{customComponents.length}</Badge>
+                  <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-r from-muted/50 to-accent/10">
+                    <span className="text-sm font-medium text-muted-foreground">Custom Components</span>
+                    <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                      {customComponents.length}
+                    </Badge>
                   </div>
                 )}
                 {customIntegrations.length > 0 && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Custom Integrations</span>
-                    <Badge variant="outline">{customIntegrations.length}</Badge>
+                  <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-r from-muted/50 to-secondary/10">
+                    <span className="text-sm font-medium text-muted-foreground">Custom Integrations</span>
+                    <Badge variant="outline" className="bg-secondary/10 text-secondary-foreground border-secondary/20">
+                      {customIntegrations.length}
+                    </Badge>
                   </div>
                 )}
               </CardContent>

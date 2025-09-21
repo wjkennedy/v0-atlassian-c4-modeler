@@ -232,10 +232,10 @@ export function SettingsModal({ open, onOpenChange, onComponentsUpdate, onIntegr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[80vw] max-w-7xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
+            <Settings className="h-5 w-25" />
             Application Settings
           </DialogTitle>
           <DialogDescription>

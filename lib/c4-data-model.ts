@@ -34,6 +34,7 @@ export interface IntegrationDefinition {
   category: string
   technology: string
   vendor: string
+  atlassianProducts?: string[]
   // Level-specific relationship definitions
   relationships: {
     landscape?: C4LevelRelationship[]
@@ -75,6 +76,7 @@ export interface InternalDefinition {
   category: string
   technology: string
   vendor: string
+  atlassianProducts?: string[]
   // Level-specific relationship definitions
   relationships: {
     landscape?: C4LevelRelationship[]

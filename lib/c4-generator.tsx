@@ -35,6 +35,11 @@ export interface MultiLevelC4Model {
   plugin: C4Model // Added plugin diagram
 }
 
+export interface C4Catalog {
+  items: C4Element[]
+  relationships: C4Relationship[]
+}
+
 export class C4ModelGenerator {
   private model: C4Model
 
@@ -245,11 +250,13 @@ export class MultiLevelC4Generator {
   private baseTitle: string
   private selectedComponents: string[]
   private selectedIntegrations: string[]
+  private catalog?: C4Catalog // Added catalog reference for hierarchy-aware generation
 
-  constructor(title: string, selectedComponents: string[], selectedIntegrations: string[]) {
+  constructor(title: string, selectedComponents: string[], selectedIntegrations: string[], catalog?: C4Catalog) {
     this.baseTitle = title
     this.selectedComponents = selectedComponents
     this.selectedIntegrations = selectedIntegrations
+    this.catalog = catalog // Store catalog for hierarchy navigation
   }
 
   generateAllLevels(): MultiLevelC4Model {
@@ -490,83 +497,110 @@ export class MultiLevelC4Generator {
       description: "Atlassian solution partner managing enterprise architecture",
     })
 
-    // Add components within the primary container
-    const componentMap = this.getComponentBreakdown(primaryComponent)
-    Object.entries(componentMap).forEach(([id, comp]) => {
-      generator.addElement({
-        id,
-        name: comp.name,
-        type: "component",
-        description: comp.description,
-        technology: comp.technology,
-        parent: primaryComponent,
-      })
-    })
-
-    // Add database
-    generator.addElement({
-      id: "database",
-      name: "Database",
-      type: "container",
-      description: "Application database",
-      technology: "PostgreSQL",
-    })
-
-    // Add relationships between components
-    generator.addRelationship({
-      from: "user",
-      to: "web_controller",
-      description: "Makes requests to",
-      technology: "HTTPS",
-    })
-
-    generator.addRelationship({
-      from: "web_controller",
-      to: "business_logic",
-      description: "Uses",
-    })
-
-    generator.addRelationship({
-      from: "business_logic",
-      to: "data_access",
-      description: "Uses",
-    })
-
-    generator.addRelationship({
-      from: "data_access",
-      to: "database",
-      description: "Reads from and writes to",
-      technology: "JDBC/SQL",
-    })
-
-    if (this.selectedIntegrations.includes("jenkins") || this.selectedIntegrations.includes("github")) {
-      generator.addElement({
-        id: "webhook_handler",
-        name: "Webhook Handler",
-        type: "component",
-        description: "Processes incoming webhooks from CI/CD systems",
-        technology: "REST API",
+    if (this.catalog) {
+      const children = getChildrenOf(this.catalog, primaryComponent)
+      children.forEach((child) => {
+        generator.addElement({
+          id: child.id,
+          name: child.name,
+          type: "component",
+          description: child.description,
+          technology: child.technology,
+          parent: primaryComponent,
+        })
       })
 
+      // Add relationships from catalog
+      children.forEach((child) => {
+        const componentRels = child.relationships.component || []
+        componentRels.forEach((rel) => {
+          generator.addRelationship({
+            from: rel.from,
+            to: rel.to,
+            description: rel.description,
+            technology: rel.technology,
+          })
+        })
+      })
+    } else {
+      // Fallback to hardcoded breakdown
+      const componentMap = this.getComponentBreakdown(primaryComponent)
+      Object.entries(componentMap).forEach(([id, comp]) => {
+        generator.addElement({
+          id,
+          name: comp.name,
+          type: "component",
+          description: comp.description,
+          technology: comp.technology,
+          parent: primaryComponent,
+        })
+      })
+
+      // Add database
       generator.addElement({
-        id: "deployment_tracker",
-        name: "Deployment Tracker",
-        type: "component",
-        description: "Tracks deployment status and updates issues",
-        technology: "Background Service",
+        id: "database",
+        name: "Database",
+        type: "container",
+        description: "Application database",
+        technology: "PostgreSQL",
+      })
+
+      // Add relationships between components
+      generator.addRelationship({
+        from: "user",
+        to: "web_controller",
+        description: "Makes requests to",
+        technology: "HTTPS",
       })
 
       generator.addRelationship({
-        from: "webhook_handler",
-        to: "deployment_tracker",
-        description: "Triggers",
-      })
-
-      generator.addRelationship({
-        from: "deployment_tracker",
+        from: "web_controller",
         to: "business_logic",
-        description: "Updates issue status via",
+        description: "Uses",
       })
+
+      generator.addRelationship({
+        from: "business_logic",
+        to: "data_access",
+        description: "Uses",
+      })
+
+      generator.addRelationship({
+        from: "data_access",
+        to: "database",
+        description: "Reads from and writes to",
+        technology: "JDBC/SQL",
+      })
+
+      if (this.selectedIntegrations.includes("jenkins") || this.selectedIntegrations.includes("github")) {
+        generator.addElement({
+          id: "webhook_handler",
+          name: "Webhook Handler",
+          type: "component",
+          description: "Processes incoming webhooks from CI/CD systems",
+          technology: "REST API",
+        })
+
+        generator.addElement({
+          id: "deployment_tracker",
+          name: "Deployment Tracker",
+          type: "component",
+          description: "Tracks deployment status and updates issues",
+          technology: "Background Service",
+        })
+
+        generator.addRelationship({
+          from: "webhook_handler",
+          to: "deployment_tracker",
+          description: "Triggers",
+        })
+
+        generator.addRelationship({
+          from: "deployment_tracker",
+          to: "business_logic",
+          description: "Updates issue status via",
+        })
+      }
     }
 
     return generator.getModel()
@@ -575,137 +609,94 @@ export class MultiLevelC4Generator {
   private generateCodeDiagram(): C4Model {
     const generator = new C4ModelGenerator(`${this.baseTitle}`, "code")
 
-    // This would typically show class-level details
-    // For demonstration, we'll show key classes for the business logic component
+    // Get the first selected component
+    const primaryComponent = this.selectedComponents[0]
+    if (!primaryComponent) return generator.getModel()
 
-    generator.addElement({
-      id: "IssueController",
-      name: "IssueController",
-      type: "component",
-      description: "REST controller for issue operations",
-      technology: "Java/Spring",
-    })
+    if (this.catalog) {
+      // Find components within the selected container
+      const components = getItemsInContainer(this.catalog, primaryComponent)
 
-    generator.addElement({
-      id: "IssueService",
-      name: "IssueService",
-      type: "component",
-      description: "Business logic for issue management",
-      technology: "Java",
-    })
-
-    generator.addElement({
-      id: "IssueRepository",
-      name: "IssueRepository",
-      type: "component",
-      description: "Data access layer for issues",
-      technology: "JPA/Hibernate",
-    })
-
-    generator.addElement({
-      id: "Issue",
-      name: "Issue",
-      type: "component",
-      description: "Domain model representing an issue",
-      technology: "Java Entity",
-    })
-
-    // Add relationships
-    generator.addRelationship({
-      from: "IssueController",
-      to: "IssueService",
-      description: "Uses",
-    })
-
-    generator.addRelationship({
-      from: "IssueService",
-      to: "IssueRepository",
-      description: "Uses",
-    })
-
-    generator.addRelationship({
-      from: "IssueRepository",
-      to: "Issue",
-      description: "Manages",
-    })
-
-    return generator.getModel()
-  }
-
-  private generateSystemLandscape(): C4Model {
-    const generator = new C4ModelGenerator(`${this.baseTitle} - Enterprise Landscape`, "landscape")
-
-    // Add different types of users/personas
-    generator.addElement({
-      id: "solution_partner",
-      name: "Solution Partner",
-      type: "person",
-      description: "Atlassian solution partner managing enterprise architecture",
-    })
-
-    generator.addElement({
-      id: "end_users",
-      name: "End Users",
-      type: "person",
-      description: "Development teams and business users",
-    })
-
-    generator.addElement({
-      id: "administrators",
-      name: "System Administrators",
-      type: "person",
-      description: "IT administrators managing the platform",
-    })
-
-    // Add main Atlassian ecosystem as a system
-    generator.addElement({
-      id: "atlassian_ecosystem",
-      name: "Atlassian Cloud Ecosystem",
-      type: "system",
-      description: "Complete Atlassian Cloud platform with integrated products",
-      technology: "Cloud SaaS",
-    })
-
-    // Add external systems based on integrations
-    this.selectedIntegrations.forEach((integrationId) => {
-      const integration = getIntegrationData(integrationId)
-      if (integration) {
-        generator.addElement({
-          id: integrationId,
-          name: integration.name,
-          type: "system",
-          description: integration.description,
-          tags: ["external"],
+      // For each component, get its code-level children
+      components.forEach((comp) => {
+        const codeElements = getChildrenOf(this.catalog, comp.id).filter((item) => item.level === "code")
+        codeElements.forEach((codeItem) => {
+          generator.addElement({
+            id: codeItem.id,
+            name: codeItem.name,
+            type: "component",
+            description: codeItem.description,
+            technology: codeItem.technology,
+            parent: comp.id,
+          })
         })
 
-        // Connect external systems to Atlassian ecosystem
-        generator.addRelationship({
-          from: "atlassian_ecosystem",
-          to: integrationId,
-          description: "Integrates with",
-          technology: this.getIntegrationTechnology(integrationId),
+        // Add code-level relationships
+        codeElements.forEach((codeItem) => {
+          const codeRels = codeItem.relationships.code || []
+          codeRels.forEach((rel) => {
+            generator.addRelationship({
+              from: rel.from,
+              to: rel.to,
+              description: rel.description,
+              technology: rel.technology,
+            })
+          })
         })
-      }
-    })
+      })
+    } else {
+      // Fallback to hardcoded class structure
+      generator.addElement({
+        id: "IssueController",
+        name: "IssueController",
+        type: "component",
+        description: "REST controller for issue operations",
+        technology: "Java/Spring",
+      })
 
-    // Add relationships from users to systems
-    generator.addRelationship({
-      from: "solution_partner",
-      to: "atlassian_ecosystem",
-      description: "Configures and manages",
-    })
+      generator.addElement({
+        id: "IssueService",
+        name: "IssueService",
+        type: "component",
+        description: "Business logic for issue management",
+        technology: "Java",
+      })
 
-    generator.addRelationship({
-      from: "end_users",
-      to: "atlassian_ecosystem",
-      description: "Uses for daily work",
-    })
+      generator.addElement({
+        id: "IssueRepository",
+        name: "IssueRepository",
+        type: "component",
+        description: "Data access layer for issues",
+        technology: "JPA/Hibernate",
+      })
 
-    generator.addRelationship({
-      from: "administrators",
-      to: "atlassian_ecosystem",
-      description: "Administers and maintains",
-    })
+      generator.addElement({
+        id: "Issue",
+        name: "Issue",
+        type: "component",
+        description: "Domain model representing an issue",
+        technology: "Java Entity",
+      })
+
+      // Add relationships
+      generator.addRelationship({
+        from: "IssueController",
+        to: "IssueService",
+        description: "Uses",
+      })
+
+      generator.addRelationship({
+        from: "IssueService",
+        to: "IssueRepository",
+        description: "Uses",
+      })
+
+      generator.addRelationship({
+        from: "IssueRepository",
+        to: "Issue",
+        description: "Manages",
+      })
+    }
 
     return generator.getModel()
   }
@@ -835,6 +826,84 @@ export class MultiLevelC4Generator {
           technology: "Business Process",
         })
       })
+    })
+
+    return generator.getModel()
+  }
+
+  private generateSystemLandscape(): C4Model {
+    const generator = new C4ModelGenerator(`${this.baseTitle} - Enterprise Landscape`, "landscape")
+
+    // Add different types of users/personas
+    generator.addElement({
+      id: "solution_partner",
+      name: "Solution Partner",
+      type: "person",
+      description: "Atlassian solution partner managing enterprise architecture",
+    })
+
+    generator.addElement({
+      id: "end_users",
+      name: "End Users",
+      type: "person",
+      description: "Development teams and business users",
+    })
+
+    generator.addElement({
+      id: "administrators",
+      name: "System Administrators",
+      type: "person",
+      description: "IT administrators managing the platform",
+    })
+
+    // Add main Atlassian ecosystem as a system
+    generator.addElement({
+      id: "atlassian_ecosystem",
+      name: "Atlassian Cloud Ecosystem",
+      type: "system",
+      description: "Complete Atlassian Cloud platform with integrated products",
+      technology: "Cloud SaaS",
+    })
+
+    // Add external systems based on integrations
+    this.selectedIntegrations.forEach((integrationId) => {
+      const integration = getIntegrationData(integrationId)
+      if (integration) {
+        generator.addElement({
+          id: integrationId,
+          name: integration.name,
+          type: "system",
+          description: integration.description,
+          tags: ["external"],
+        })
+
+        // Connect external systems to Atlassian ecosystem
+        generator.addRelationship({
+          from: "atlassian_ecosystem",
+          to: integrationId,
+          description: "Integrates with",
+          technology: this.getIntegrationTechnology(integrationId),
+        })
+      }
+    })
+
+    // Add relationships from users to systems
+    generator.addRelationship({
+      from: "solution_partner",
+      to: "atlassian_ecosystem",
+      description: "Configures and manages",
+    })
+
+    generator.addRelationship({
+      from: "end_users",
+      to: "atlassian_ecosystem",
+      description: "Uses for daily work",
+    })
+
+    generator.addRelationship({
+      from: "administrators",
+      to: "atlassian_ecosystem",
+      description: "Administers and maintains",
     })
 
     return generator.getModel()
@@ -1114,8 +1183,9 @@ export function createMultiLevelAtlassianC4Model(
   selectedComponents: string[],
   selectedIntegrations: string[],
   title: string,
+  catalog?: C4Catalog,
 ): MultiLevelC4Model {
-  const generator = new MultiLevelC4Generator(title, selectedComponents, selectedIntegrations)
+  const generator = new MultiLevelC4Generator(title, selectedComponents, selectedIntegrations, catalog)
   return generator.generateAllLevels()
 }
 
@@ -1170,4 +1240,12 @@ function getIntegrationData(id: string) {
     "data-ingestion": { name: "Data Ingestion Service", description: "Custom data import and processing" },
   }
   return integrations[id]
+}
+
+function getChildrenOf(catalog: C4Catalog, parentId: string): C4Element[] {
+  return catalog.items.filter((item) => item.parent === parentId)
+}
+
+function getItemsInContainer(catalog: C4Catalog, containerId: string): C4Element[] {
+  return catalog.items.filter((item) => item.parent === containerId)
 }

@@ -1,0 +1,1093 @@
+{
+  "version": "1.1.0",
+  "lastUpdated": "2025-09-30T16:43:19.391322Z",
+  "components": [
+    {
+      "id": "jira-software",
+      "name": "Jira Software",
+      "description": "Project management and issue tracking",
+      "category": "Project Management",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "atlassianProducts": [
+        "Jira Software"
+      ],
+      "relationships": {
+        "landscape": [
+          {
+            "from": "solution_partner",
+            "to": "jira-software",
+            "description": "Configures and manages",
+            "technology": "Web UI"
+          },
+          {
+            "from": "end_users",
+            "to": "jira-software",
+            "description": "Uses for project tracking",
+            "technology": "Web UI"
+          }
+        ],
+        "context": [
+          {
+            "from": "user",
+            "to": "jira-software",
+            "description": "Uses for project management",
+            "technology": "HTTPS"
+          }
+        ],
+        "container": [
+          {
+            "from": "user",
+            "to": "jira-software",
+            "description": "Uses",
+            "technology": "HTTPS/Web UI"
+          },
+          {
+            "from": "jira-software",
+            "to": "primary_database",
+            "description": "Reads from and writes to",
+            "technology": "JDBC/SQL"
+          }
+        ],
+        "component": [
+          {
+            "from": "web_controller",
+            "to": "business_logic",
+            "description": "Uses"
+          },
+          {
+            "from": "business_logic",
+            "to": "data_access",
+            "description": "Uses"
+          }
+        ],
+        "code": [
+          {
+            "from": "IssueController",
+            "to": "IssueService",
+            "description": "Uses"
+          },
+          {
+            "from": "IssueService",
+            "to": "IssueRepository",
+            "description": "Uses"
+          }
+        ]
+      }
+    },
+    {
+      "id": "confluence",
+      "name": "Confluence",
+      "description": "Team collaboration and documentation",
+      "category": "Collaboration",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "atlassianProducts": [
+        "Confluence"
+      ],
+      "relationships": {
+        "landscape": [
+          {
+            "from": "end_users",
+            "to": "confluence",
+            "description": "Creates and shares documentation",
+            "technology": "Web UI"
+          }
+        ],
+        "context": [
+          {
+            "from": "user",
+            "to": "confluence",
+            "description": "Uses for documentation",
+            "technology": "HTTPS"
+          }
+        ],
+        "container": [
+          {
+            "from": "user",
+            "to": "confluence",
+            "description": "Uses",
+            "technology": "HTTPS/Web UI"
+          },
+          {
+            "from": "confluence",
+            "to": "primary_database",
+            "description": "Reads from and writes to",
+            "technology": "JDBC/SQL"
+          }
+        ],
+        "component": [
+          {
+            "from": "page_controller",
+            "to": "content_service",
+            "description": "Uses"
+          },
+          {
+            "from": "content_service",
+            "to": "content_repository",
+            "description": "Uses"
+          }
+        ]
+      }
+    },
+    {
+      "id": "bitbucket",
+      "name": "Bitbucket",
+      "description": "Git repository management",
+      "category": "Development",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "atlassianProducts": [
+        "Bitbucket"
+      ],
+      "relationships": {
+        "landscape": [
+          {
+            "from": "end_users",
+            "to": "bitbucket",
+            "description": "Manages code repositories",
+            "technology": "Git/HTTPS"
+          }
+        ],
+        "context": [
+          {
+            "from": "user",
+            "to": "bitbucket",
+            "description": "Uses for code management",
+            "technology": "Git/HTTPS"
+          }
+        ],
+        "container": [
+          {
+            "from": "user",
+            "to": "bitbucket",
+            "description": "Pushes and pulls code",
+            "technology": "Git/HTTPS"
+          },
+          {
+            "from": "bitbucket",
+            "to": "cicd_pipeline",
+            "description": "Triggers builds on code changes",
+            "technology": "Webhooks"
+          }
+        ],
+        "component": [
+          {
+            "from": "git_controller",
+            "to": "repository_service",
+            "description": "Uses"
+          },
+          {
+            "from": "repository_service",
+            "to": "git_storage",
+            "description": "Uses"
+          }
+        ]
+      }
+    },
+    {
+      "id": "jira-service-management",
+      "name": "Jira Service Management",
+      "description": "IT service management and support",
+      "category": "ITSM",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "jira-work-management",
+      "name": "Jira Work Management",
+      "description": "Business team project management",
+      "category": "Project Management",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "trello",
+      "name": "Trello",
+      "description": "Visual project management boards",
+      "category": "Project Management",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "compass",
+      "name": "Compass",
+      "description": "Developer experience platform",
+      "category": "Platform",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "atlas",
+      "name": "Atlas",
+      "description": "Teamwork directory and insights",
+      "category": "Platform",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "atlassian-marketplace",
+      "name": "Atlassian Marketplace",
+      "description": "App marketplace and ecosystem",
+      "category": "Platform",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "jira-align",
+      "name": "Jira Align",
+      "description": "Enterprise agile planning",
+      "category": "Enterprise",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "portfolio-for-jira",
+      "name": "Portfolio for Jira",
+      "description": "Advanced project portfolio management",
+      "category": "Enterprise",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "aha",
+      "name": "Aha!",
+      "description": "Product roadmap and strategy",
+      "category": "Product Management",
+      "technology": "Atlassian Cloud",
+      "vendor": "Aha!",
+      "relationships": {}
+    },
+    {
+      "id": "asana",
+      "name": "Asana",
+      "description": "Team collaboration and project management",
+      "category": "Product Management",
+      "technology": "Atlassian Cloud",
+      "vendor": "Asana",
+      "relationships": {}
+    },
+    {
+      "id": "jira-product-discovery",
+      "name": "Jira Product Discovery",
+      "description": "Product roadmap and discovery",
+      "category": "Product Management",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "bamboo",
+      "name": "Bamboo",
+      "description": "Continuous integration and deployment",
+      "category": "DevOps",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "fisheye-crucible",
+      "name": "Fisheye & Crucible",
+      "description": "Code review and repository browsing",
+      "category": "DevOps",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "crowd",
+      "name": "Crowd",
+      "description": "Identity management and single sign-on",
+      "category": "Security",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "atlassian-access",
+      "name": "Atlassian Access",
+      "description": "Enterprise security and user management",
+      "category": "Security",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "atlassian-analytics",
+      "name": "Atlassian Analytics",
+      "description": "Cross-product analytics and insights",
+      "category": "Analytics",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "statuspage",
+      "name": "Statuspage",
+      "description": "Status communication platform",
+      "category": "Operations",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "opsgenie",
+      "name": "Opsgenie",
+      "description": "Incident management and alerting",
+      "category": "Operations",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "atlassian-intelligence",
+      "name": "Atlassian Intelligence",
+      "description": "AI-powered features across Atlassian products",
+      "category": "AI/ML",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "atlassian-mobile",
+      "name": "Atlassian Mobile Apps",
+      "description": "Mobile applications for iOS and Android",
+      "category": "Mobile",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "team-calendars",
+      "name": "Team Calendars",
+      "description": "Team scheduling and calendar management",
+      "category": "Productivity",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "primary-database",
+      "name": "Primary Database",
+      "description": "Main application database",
+      "category": "Infrastructure",
+      "technology": "SQL/Relational DB",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "analytics-database",
+      "name": "Analytics Database",
+      "description": "Data warehouse and analytics",
+      "category": "Infrastructure",
+      "technology": "Data Warehouse",
+      "vendor": "Atlassian",
+      "relationships": {}
+    }
+  ],
+  "integrations": [
+    {
+      "id": "github",
+      "name": "GitHub",
+      "description": "Code repository and collaboration",
+      "category": "Development",
+      "technology": "Git/REST API",
+      "vendor": "GitHub",
+      "relationships": {
+        "landscape": [
+          {
+            "from": "atlassian_ecosystem",
+            "to": "github",
+            "description": "Integrates with for code management",
+            "technology": "REST API/Webhooks"
+          }
+        ],
+        "context": [
+          {
+            "from": "atlassian_system",
+            "to": "github",
+            "description": "Integrates with",
+            "technology": "REST API/Webhooks"
+          }
+        ],
+        "container": [
+          {
+            "from": "jira-software",
+            "to": "github",
+            "description": "Links issues to commits and PRs",
+            "technology": "REST API/Webhooks"
+          },
+          {
+            "from": "github",
+            "to": "cicd_pipeline",
+            "description": "Triggers builds",
+            "technology": "Webhooks"
+          }
+        ],
+        "component": [
+          {
+            "from": "webhook_handler",
+            "to": "github",
+            "description": "Receives webhook events from",
+            "technology": "HTTPS/JSON"
+          }
+        ],
+        "code": [
+          {
+            "from": "GitHubWebhookController",
+            "to": "GitHubService",
+            "description": "Uses"
+          }
+        ]
+      }
+    },
+    {
+      "id": "slack",
+      "name": "Slack",
+      "description": "Team communication and collaboration",
+      "category": "Communication",
+      "technology": "REST API/Webhooks",
+      "vendor": "Slack",
+      "relationships": {
+        "landscape": [
+          {
+            "from": "atlassian_ecosystem",
+            "to": "slack",
+            "description": "Sends notifications to",
+            "technology": "REST API/Webhooks"
+          }
+        ],
+        "context": [
+          {
+            "from": "atlassian_system",
+            "to": "slack",
+            "description": "Integrates with",
+            "technology": "REST API/Webhooks"
+          }
+        ],
+        "container": [
+          {
+            "from": "jira-software",
+            "to": "slack",
+            "description": "Sends issue notifications to",
+            "technology": "REST API/Webhooks"
+          },
+          {
+            "from": "confluence",
+            "to": "slack",
+            "description": "Sends page update notifications to",
+            "technology": "REST API/Webhooks"
+          }
+        ],
+        "component": [
+          {
+            "from": "notification_service",
+            "to": "slack",
+            "description": "Sends messages to",
+            "technology": "REST API"
+          }
+        ]
+      }
+    },
+    {
+      "id": "servicenow",
+      "name": "ServiceNow",
+      "description": "IT service management and workflow automation",
+      "category": "ITSM",
+      "technology": "Atlassian Cloud",
+      "vendor": "ServiceNow",
+      "relationships": {}
+    },
+    {
+      "id": "salesforce",
+      "name": "Salesforce",
+      "description": "Customer relationship management",
+      "category": "CRM",
+      "technology": "Atlassian Cloud",
+      "vendor": "Salesforce",
+      "relationships": {}
+    },
+    {
+      "id": "gitlab",
+      "name": "GitLab",
+      "description": "DevOps platform with integrated CI/CD",
+      "category": "DevOps",
+      "technology": "Atlassian Cloud",
+      "vendor": "GitLab",
+      "relationships": {}
+    },
+    {
+      "id": "jenkins",
+      "name": "Jenkins",
+      "description": "Continuous integration and deployment",
+      "category": "DevOps",
+      "technology": "Atlassian Cloud",
+      "vendor": "Jenkins",
+      "relationships": {}
+    },
+    {
+      "id": "azure-devops",
+      "name": "Azure DevOps",
+      "description": "Microsoft DevOps platform",
+      "category": "DevOps",
+      "technology": "Atlassian Cloud",
+      "vendor": "Microsoft",
+      "relationships": {}
+    },
+    {
+      "id": "circleci",
+      "name": "CircleCI",
+      "description": "Continuous integration and delivery",
+      "category": "DevOps",
+      "technology": "Atlassian Cloud",
+      "vendor": "CircleCI",
+      "relationships": {}
+    },
+    {
+      "id": "teamcity",
+      "name": "TeamCity",
+      "description": "JetBrains CI/CD server",
+      "category": "DevOps",
+      "technology": "Atlassian Cloud",
+      "vendor": "JetBrains",
+      "relationships": {}
+    },
+    {
+      "id": "terraform",
+      "name": "Terraform",
+      "description": "Infrastructure as code",
+      "category": "DevOps",
+      "technology": "Atlassian Cloud",
+      "vendor": "HashiCorp",
+      "relationships": {}
+    },
+    {
+      "id": "okta",
+      "name": "Okta",
+      "description": "Identity and access management",
+      "category": "Security",
+      "technology": "Atlassian Cloud",
+      "vendor": "Okta",
+      "relationships": {}
+    },
+    {
+      "id": "azure-ad",
+      "name": "Azure Active Directory",
+      "description": "Microsoft identity platform",
+      "category": "Security",
+      "technology": "Atlassian Cloud",
+      "vendor": "Microsoft",
+      "relationships": {}
+    },
+    {
+      "id": "ping-identity",
+      "name": "Ping Identity",
+      "description": "Enterprise identity and access management",
+      "category": "Security",
+      "technology": "Atlassian Cloud",
+      "vendor": "Ping Identity",
+      "relationships": {}
+    },
+    {
+      "id": "auth0",
+      "name": "Auth0",
+      "description": "Identity platform for developers",
+      "category": "Security",
+      "technology": "Atlassian Cloud",
+      "vendor": "Auth0",
+      "relationships": {}
+    },
+    {
+      "id": "google-workspace",
+      "name": "Google Workspace",
+      "description": "Google productivity and collaboration tools",
+      "category": "Productivity",
+      "technology": "Atlassian Cloud",
+      "vendor": "Google",
+      "relationships": {}
+    },
+    {
+      "id": "microsoft-365",
+      "name": "Microsoft 365",
+      "description": "Microsoft productivity suite",
+      "category": "Productivity",
+      "technology": "Atlassian Cloud",
+      "vendor": "Microsoft",
+      "relationships": {}
+    },
+    {
+      "id": "notion",
+      "name": "Notion",
+      "description": "All-in-one workspace for notes and collaboration",
+      "category": "Productivity",
+      "technology": "Atlassian Cloud",
+      "vendor": "Notion",
+      "relationships": {}
+    },
+    {
+      "id": "airtable",
+      "name": "Airtable",
+      "description": "Cloud collaboration service with database features",
+      "category": "Productivity",
+      "technology": "Atlassian Cloud",
+      "vendor": "Airtable",
+      "relationships": {}
+    },
+    {
+      "id": "monday",
+      "name": "Monday.com",
+      "description": "Work OS and project management",
+      "category": "Productivity",
+      "technology": "Atlassian Cloud",
+      "vendor": "Monday.com",
+      "relationships": {}
+    },
+    {
+      "id": "msteams",
+      "name": "Microsoft Teams",
+      "description": "Unified communication platform",
+      "category": "Communication",
+      "technology": "Atlassian Cloud",
+      "vendor": "Microsoft",
+      "relationships": {}
+    },
+    {
+      "id": "zoom",
+      "name": "Zoom",
+      "description": "Video conferencing and communication",
+      "category": "Communication",
+      "technology": "Atlassian Cloud",
+      "vendor": "Zoom",
+      "relationships": {}
+    },
+    {
+      "id": "webex",
+      "name": "Cisco Webex",
+      "description": "Enterprise video conferencing",
+      "category": "Communication",
+      "technology": "Atlassian Cloud",
+      "vendor": "Cisco",
+      "relationships": {}
+    },
+    {
+      "id": "discord",
+      "name": "Discord",
+      "description": "Voice, video and text communication",
+      "category": "Communication",
+      "technology": "Atlassian Cloud",
+      "vendor": "Discord",
+      "relationships": {}
+    },
+    {
+      "id": "twilio",
+      "name": "Twilio",
+      "description": "Cloud communications platform",
+      "category": "Communication",
+      "technology": "Atlassian Cloud",
+      "vendor": "Twilio",
+      "relationships": {}
+    },
+    {
+      "id": "sendgrid",
+      "name": "SendGrid",
+      "description": "Email delivery and marketing platform",
+      "category": "Communication",
+      "technology": "Atlassian Cloud",
+      "vendor": "Twilio",
+      "relationships": {}
+    },
+    {
+      "id": "loom",
+      "name": "Loom",
+      "description": "Video messaging and screen recording",
+      "category": "Communication",
+      "technology": "Atlassian Cloud",
+      "vendor": "Loom",
+      "relationships": {}
+    },
+    {
+      "id": "tableau",
+      "name": "Tableau",
+      "description": "Business intelligence and analytics",
+      "category": "Analytics",
+      "technology": "Atlassian Cloud",
+      "vendor": "Salesforce",
+      "relationships": {}
+    },
+    {
+      "id": "powerbi",
+      "name": "Power BI",
+      "description": "Microsoft business analytics",
+      "category": "Analytics",
+      "technology": "Atlassian Cloud",
+      "vendor": "Microsoft",
+      "relationships": {}
+    },
+    {
+      "id": "looker",
+      "name": "Looker",
+      "description": "Business intelligence and data platform",
+      "category": "Analytics",
+      "technology": "Atlassian Cloud",
+      "vendor": "Google",
+      "relationships": {}
+    },
+    {
+      "id": "qlik-sense",
+      "name": "Qlik Sense",
+      "description": "Self-service data analytics",
+      "category": "Analytics",
+      "technology": "Atlassian Cloud",
+      "vendor": "Qlik",
+      "relationships": {}
+    },
+    {
+      "id": "splunk",
+      "name": "Splunk",
+      "description": "Data platform for security and observability",
+      "category": "Analytics",
+      "technology": "Atlassian Cloud",
+      "vendor": "Splunk",
+      "relationships": {}
+    },
+    {
+      "id": "aws",
+      "name": "Amazon Web Services",
+      "description": "Cloud infrastructure and services",
+      "category": "Infrastructure",
+      "technology": "Atlassian Cloud",
+      "vendor": "AWS",
+      "relationships": {}
+    },
+    {
+      "id": "azure",
+      "name": "Microsoft Azure",
+      "description": "Cloud computing platform",
+      "category": "Infrastructure",
+      "technology": "Atlassian Cloud",
+      "vendor": "Microsoft",
+      "relationships": {}
+    },
+    {
+      "id": "gcp",
+      "name": "Google Cloud Platform",
+      "description": "Google cloud infrastructure and services",
+      "category": "Infrastructure",
+      "technology": "Atlassian Cloud",
+      "vendor": "Google",
+      "relationships": {}
+    },
+    {
+      "id": "docker",
+      "name": "Docker",
+      "description": "Containerization platform",
+      "category": "Infrastructure",
+      "technology": "Atlassian Cloud",
+      "vendor": "Docker",
+      "relationships": {}
+    },
+    {
+      "id": "kubernetes",
+      "name": "Kubernetes",
+      "description": "Container orchestration platform",
+      "category": "Infrastructure",
+      "technology": "Atlassian Cloud",
+      "vendor": "CNCF",
+      "relationships": {}
+    },
+    {
+      "id": "datadog",
+      "name": "Datadog",
+      "description": "Monitoring and analytics platform",
+      "category": "Monitoring",
+      "technology": "Atlassian Cloud",
+      "vendor": "Datadog",
+      "relationships": {}
+    },
+    {
+      "id": "newrelic",
+      "name": "New Relic",
+      "description": "Application performance monitoring",
+      "category": "Monitoring",
+      "technology": "Atlassian Cloud",
+      "vendor": "New Relic",
+      "relationships": {}
+    },
+    {
+      "id": "pagerduty",
+      "name": "PagerDuty",
+      "description": "Incident response platform",
+      "category": "Monitoring",
+      "technology": "Atlassian Cloud",
+      "vendor": "PagerDuty",
+      "relationships": {}
+    },
+    {
+      "id": "stripe",
+      "name": "Stripe",
+      "description": "Payment processing and financial services",
+      "category": "Finance",
+      "technology": "Atlassian Cloud",
+      "vendor": "Stripe",
+      "relationships": {}
+    },
+    {
+      "id": "paypal",
+      "name": "PayPal",
+      "description": "Digital payment platform",
+      "category": "Finance",
+      "technology": "Atlassian Cloud",
+      "vendor": "PayPal",
+      "relationships": {}
+    },
+    {
+      "id": "intercom",
+      "name": "Intercom",
+      "description": "Customer messaging and support platform",
+      "category": "Support",
+      "technology": "Atlassian Cloud",
+      "vendor": "Intercom",
+      "relationships": {}
+    },
+    {
+      "id": "zendesk",
+      "name": "Zendesk",
+      "description": "Customer service and support platform",
+      "category": "Support",
+      "technology": "Atlassian Cloud",
+      "vendor": "Zendesk",
+      "relationships": {}
+    },
+    {
+      "id": "freshdesk",
+      "name": "Freshdesk",
+      "description": "Customer support software",
+      "category": "Support",
+      "technology": "Atlassian Cloud",
+      "vendor": "Freshworks",
+      "relationships": {}
+    }
+  ],
+  "plugins": [
+    {
+      "id": "scriptrunner",
+      "name": "ScriptRunner for Jira",
+      "description": "The must-have app for Jira admins: unlimited automation and customisation",
+      "category": "Workflow & Automation",
+      "technology": "Groovy Scripts",
+      "vendor": "Adaptavist",
+      "isPopular": true,
+      "atlassianProducts": [
+        "Jira Software",
+        "Jira Service Management"
+      ],
+      "businessFunction": "Process Optimization",
+      "integrationPoints": [
+        "Workflow",
+        "Custom Fields",
+        "Automation",
+        "JQL"
+      ],
+      "relationships": {
+        "plugin": [
+          {
+            "from": "scriptrunner",
+            "to": "jira-software",
+            "description": "Extends workflow automation and custom fields",
+            "technology": "Atlassian Connect"
+          },
+          {
+            "from": "workflow",
+            "to": "process_optimization",
+            "description": "Supports",
+            "technology": "Business Process"
+          }
+        ],
+        "container": [
+          {
+            "from": "jira-software",
+            "to": "scriptrunner",
+            "description": "Uses for workflow automation",
+            "technology": "Atlassian Connect API"
+          }
+        ],
+        "component": [
+          {
+            "from": "workflow_engine",
+            "to": "scriptrunner",
+            "description": "Executes custom scripts via",
+            "technology": "Groovy Runtime"
+          }
+        ]
+      }
+    },
+    {
+      "id": "xray",
+      "name": "Xray Test Management for Jira",
+      "description": "Native Test Management for every member of your team",
+      "category": "Testing & QA",
+      "technology": "Test Management",
+      "vendor": "Xpand IT",
+      "isPopular": true,
+      "atlassianProducts": [
+        "Jira Software"
+      ],
+      "businessFunction": "Quality Assurance",
+      "integrationPoints": [
+        "Issue Management",
+        "Workflow",
+        "Dashboard"
+      ],
+      "relationships": {
+        "plugin": [
+          {
+            "from": "xray",
+            "to": "jira-software",
+            "description": "Provides test management capabilities",
+            "technology": "Atlassian Connect"
+          },
+          {
+            "from": "testing_qa",
+            "to": "quality_assurance",
+            "description": "Supports",
+            "technology": "Business Process"
+          }
+        ],
+        "container": [
+          {
+            "from": "jira-software",
+            "to": "xray",
+            "description": "Uses for test case management",
+            "technology": "Atlassian Connect API"
+          }
+        ],
+        "component": [
+          {
+            "from": "test_execution_engine",
+            "to": "xray",
+            "description": "Records test results in",
+            "technology": "REST API"
+          }
+        ]
+      }
+    }
+  ],
+  "internal": [
+    {
+      "id": "audit-framework",
+      "name": "Audit Framework",
+      "description": "Compliance and audit trail management",
+      "category": "Governance",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "reporting-engine",
+      "name": "Reporting Engine",
+      "description": "Custom reporting and analytics",
+      "category": "Analytics",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "automation-platform",
+      "name": "Automation Platform",
+      "description": "Workflow and process automation",
+      "category": "Automation",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "workflow-engine",
+      "name": "Workflow Engine",
+      "description": "Custom business process workflows",
+      "category": "Automation",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "work-item-classifier",
+      "name": "Work Item Classifier",
+      "description": "AI-powered work item classification",
+      "category": "AI/ML",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "data-ingestion",
+      "name": "Data Ingestion Service",
+      "description": "Custom data import and processing",
+      "category": "Data",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "search-engine",
+      "name": "Search Engine",
+      "description": "Full-text search and indexing service",
+      "category": "Data",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "notification-service",
+      "name": "Notification Service",
+      "description": "Centralized notification management",
+      "category": "Communication",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "integration-hub",
+      "name": "Integration Hub",
+      "description": "Central integration management platform",
+      "category": "Integration",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "api-gateway",
+      "name": "API Gateway",
+      "description": "Centralized API management and routing",
+      "category": "Infrastructure",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "message-queue",
+      "name": "Message Queue",
+      "description": "Asynchronous message processing system",
+      "category": "Infrastructure",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    },
+    {
+      "id": "cache-layer",
+      "name": "Cache Layer",
+      "description": "Distributed caching for performance optimization",
+      "category": "Infrastructure",
+      "technology": "Atlassian Cloud",
+      "vendor": "Atlassian",
+      "relationships": {}
+    }
+  ]
+}

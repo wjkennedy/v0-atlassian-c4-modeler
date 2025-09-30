@@ -48,13 +48,27 @@ import {
   MessageSquare,
   Building,
   Calendar,
+  Copy,
+  CheckCircle,
+  Layers,
+  Moon,
+  Sun,
 } from "lucide-react"
+import { useTheme } from "next-themes"
+import { createAtlassianC4Model, createMultiLevelAtlassianC4Model } from "@/lib/c4-generator"
 
 interface SettingsModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onComponentsUpdate?: (components: any[]) => void
   onIntegrationsUpdate?: (integrations: any[]) => void
+  selectedComponents?: string[]
+  selectedIntegrations?: string[]
+  config?: {
+    title: string
+    level: string
+    theme: string
+  }
 }
 
 const iconMap = {
@@ -86,13 +100,23 @@ const iconMap = {
   Settings,
 }
 
-export function SettingsModal({ open, onOpenChange, onComponentsUpdate, onIntegrationsUpdate }: SettingsModalProps) {
+export function SettingsModal({
+  open,
+  onOpenChange,
+  onComponentsUpdate,
+  onIntegrationsUpdate,
+  selectedComponents = [],
+  selectedIntegrations = [],
+  config = { title: "Atlassian Architecture", level: "container", theme: "professional" },
+}: SettingsModalProps) {
+  const { theme, setTheme } = useTheme()
   const [settings, setSettings] = useState({
     // General Settings
     organizationName: "Atlassian Solution Partners",
     defaultDiagramTitle: "Atlassian Cloud Architecture",
     autoSave: true,
     showGridLines: true,
+    darkMode: theme === "dark",
 
     // Diagram Settings
     defaultTheme: "professional",
@@ -104,12 +128,20 @@ export function SettingsModal({ open, onOpenChange, onComponentsUpdate, onIntegr
     defaultFormat: "plantuml",
     includeMetadata: true,
     compressOutput: false,
+    generateAllLevels: false,
+    selectedLevel: "context",
 
     // Security Settings
     enableAuditLog: true,
     requireApproval: false,
     encryptExports: false,
   })
+
+  const [exportFormat, setExportFormat] = useState("plantuml")
+  const [copied, setCopied] = useState(false)
+  const [generateAllLevels, setGenerateAllLevels] = useState(false)
+  const [selectedLevel, setSelectedLevel] = useState("context")
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
 
   const [customComponents, setCustomComponents] = useState<any[]>([])
   const [customIntegrations, setCustomIntegrations] = useState<any[]>([])
@@ -132,6 +164,10 @@ export function SettingsModal({ open, onOpenChange, onComponentsUpdate, onIntegr
 
   const handleSettingChange = (key: string, value: any) => {
     setSettings((prev) => ({ ...prev, [key]: value }))
+
+    if (key === "darkMode") {
+      setTheme(value ? "dark" : "light")
+    }
   }
 
   const addComponent = () => {
@@ -186,18 +222,338 @@ export function SettingsModal({ open, onOpenChange, onComponentsUpdate, onIntegr
     onIntegrationsUpdate?.(updated)
   }
 
+  const generateC4Markup = () => {
+    if (generateAllLevels) {
+      const multiModel = createMultiLevelAtlassianC4Model(selectedComponents, selectedIntegrations, config.title)
+      const selectedModel = multiModel[selectedLevel]
+
+      const tempGenerator = {
+        generatePlantUML: () => generatePlantUMLForModel(selectedModel),
+        generateMermaid: () => generateMermaidForModel(selectedModel),
+        generateStructurizr: () => generateStructurizrForModel(selectedModel),
+      }
+
+      switch (exportFormat) {
+        case "plantuml":
+          return tempGenerator.generatePlantUML()
+        case "mermaid":
+          return tempGenerator.generateMermaid()
+        case "structurizr":
+          return tempGenerator.generateStructurizr()
+        default:
+          return tempGenerator.generatePlantUML()
+      }
+    } else {
+      const generator = createAtlassianC4Model(selectedComponents, selectedIntegrations, config)
+      switch (exportFormat) {
+        case "plantuml":
+          return generator.generatePlantUML()
+        case "mermaid":
+          return generator.generateMermaid()
+        case "structurizr":
+          return generator.generateStructurizr()
+        default:
+          return generator.generatePlantUML()
+      }
+    }
+  }
+
+  const generatePlantUMLForModel = (model: any) => {
+    const includeMap = {
+      context: "C4_Context.puml",
+      container: "C4_Container.puml",
+      component: "C4_Component.puml",
+      code: "C4_Component.puml",
+      landscape: "C4_Landscape.puml",
+    }
+
+    let puml = `@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/${includeMap[model.level]}
+
+title ${model.title} - ${model.level.charAt(0).toUpperCase() + model.level.slice(1)} Diagram
+${model.description ? `\n!define DESCRIPTION ${model.description}` : ""}
+
+`
+
+    model.elements.forEach((element: any) => {
+      const elementType = getPlantUMLElementType(element.type)
+      const tech = element.technology ? `, "${element.technology}"` : ""
+      puml += `${elementType}(${element.id}, "${element.name}"${tech}, "${element.description}")
+`
+    })
+
+    puml += `
+`
+
+    model.relationships.forEach((rel: any) => {
+      const tech = rel.technology ? `, "${rel.technology}"` : ""
+      puml += `Rel(${rel.from}, ${rel.to}, "${rel.description}"${tech})
+`
+    })
+
+    puml += `
+@enduml`
+    return puml
+  }
+
+  const generateMermaidForModel = (model: any) => {
+    let mermaid = `---
+title: ${model.title} - ${model.level.charAt(0).toUpperCase() + model.level.slice(1)} Diagram
+---
+graph TD
+
+`
+
+    model.elements.forEach((element: any) => {
+      const shape = getMermaidShape(element.type)
+      const tech = element.technology ? `<br/><i>${element.technology}</i>` : ""
+      mermaid += `    ${element.id}${shape.replace("${type}", `${element.name}${tech}<br/>${element.description}`)}
+`
+    })
+
+    mermaid += `
+`
+
+    model.relationships.forEach((rel: any) => {
+      const tech = rel.technology ? ` (${rel.technology})` : ""
+      mermaid += `    ${rel.from} -->|${rel.description}${tech}| ${rel.to}
+`
+    })
+
+    mermaid += `
+    classDef person fill:#08427b
+    classDef system fill:#1168bd
+    classDef container fill:#438dd5
+    classDef component fill:#85bbf0
+`
+
+    model.elements.forEach((element: any) => {
+      mermaid += `    class ${element.id} ${element.type}
+`
+    })
+
+    return mermaid
+  }
+
+  const generateStructurizrForModel = (model: any) => {
+    let dsl = `workspace "${model.title} - ${model.level.charAt(0).toUpperCase() + model.level.slice(1)} Diagram" {
+    model {
+`
+
+    const people = model.elements.filter((e: any) => e.type === "person")
+    const systems = model.elements.filter((e: any) => e.type === "system")
+    const containers = model.elements.filter((e: any) => e.type === "container")
+
+    people.forEach((person: any) => {
+      dsl += `        ${person.id} = person "${person.name}" "${person.description}"
+`
+    })
+
+    systems.forEach((system: any) => {
+      dsl += `        ${system.id} = softwareSystem "${system.name}" "${system.description}"
+`
+    })
+
+    if (containers.length > 0) {
+      dsl += `
+        mainSystem = softwareSystem "${model.title}" {
+`
+      containers.forEach((container: any) => {
+        const tech = container.technology ? ` "${container.technology}"` : ""
+        dsl += `            ${container.id} = container "${container.name}"${tech} "${container.description}"
+`
+      })
+      dsl += `        }
+`
+    }
+
+    dsl += `
+
+`
+
+    model.relationships.forEach((rel: any) => {
+      dsl += `        ${rel.from} -> ${rel.to} "${rel.description}"
+`
+    })
+
+    dsl += `    }
+
+    views {
+        systemContext mainSystem {
+            include *
+            autoLayout
+        }
+
+        container mainSystem {
+            include *
+            autoLayout
+        }
+    }
+}`
+
+    return dsl
+  }
+
+  const getPlantUMLElementType = (type: string): string => {
+    const typeMap = {
+      person: "Person",
+      system: "System",
+      container: "Container",
+      component: "Component",
+      landscape: "System",
+    }
+    return typeMap[type as keyof typeof typeMap] || "Container"
+  }
+
+  const getMermaidShape = (type: string): string => {
+    const shapeMap = {
+      person: `["${type}"]`,
+      system: `[${type}]`,
+      container: `(${type})`,
+      component: `{${type}}`,
+      landscape: `[${type}]`,
+    }
+    return shapeMap[type as keyof typeof shapeMap] || `[${type}]`
+  }
+
+  const handleCopy = async () => {
+    const markup = generateC4Markup()
+    await navigator.clipboard.writeText(markup)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleDownload = () => {
+    const markup = generateC4Markup()
+    const extension = exportFormat === "plantuml" ? "puml" : exportFormat === "mermaid" ? "mmd" : "dsl"
+    const levelSuffix = generateAllLevels ? "-all-levels" : `-${selectedLevel}`
+    const filename = `${config.title.toLowerCase().replace(/\s+/g, "-")}${levelSuffix}.${extension}`
+
+    const blob = new Blob([markup], { type: "text/plain" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  const handleExportPDF = async () => {
+    if (selectedComponents.length === 0) return
+
+    setIsGeneratingPDF(true)
+    try {
+      const html2canvas = (await import("html2canvas")).default
+      const jsPDF = (await import("jspdf")).jsPDF
+
+      const markup = generateC4Markup()
+
+      if (exportFormat === "mermaid") {
+        const tempContainer = document.createElement("div")
+        tempContainer.style.position = "absolute"
+        tempContainer.style.left = "-9999px"
+        tempContainer.style.top = "-9999px"
+        tempContainer.style.width = "1200px"
+        tempContainer.style.backgroundColor = "#ffffff"
+        tempContainer.style.padding = "20px"
+        document.body.appendChild(tempContainer)
+
+        try {
+          const mermaid = (await import("mermaid")).default
+
+          mermaid.initialize({
+            startOnLoad: false,
+            theme: "base",
+            themeVariables: {
+              primaryColor: "#0052cc",
+              primaryTextColor: "#ffffff",
+              primaryBorderColor: "#0052cc",
+              lineColor: "#6b7280",
+            },
+          })
+
+          const diagramId = `pdf-export-${Date.now()}`
+          const { svg } = await mermaid.render(diagramId, markup)
+
+          tempContainer.innerHTML = svg
+
+          const canvas = await html2canvas(tempContainer, {
+            backgroundColor: "#ffffff",
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            logging: false,
+          })
+
+          const imgData = canvas.toDataURL("image/png")
+          const pdf = new jsPDF({
+            orientation: canvas.width > canvas.height ? "landscape" : "portrait",
+            unit: "px",
+            format: [canvas.width, canvas.height],
+          })
+
+          pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height)
+
+          const levelSuffix = generateAllLevels ? "-all-levels" : `-${selectedLevel}`
+          const filename = `${config.title.toLowerCase().replace(/\s+/g, "-")}${levelSuffix}-diagram.pdf`
+          pdf.save(filename)
+        } finally {
+          document.body.removeChild(tempContainer)
+        }
+      } else {
+        const pdf = new jsPDF()
+        const lines = markup.split("\n")
+        let yPosition = 20
+
+        pdf.setFontSize(16)
+        pdf.text(`${config.title} - C4 Model`, 20, yPosition)
+        yPosition += 20
+
+        pdf.setFontSize(10)
+        lines.forEach((line) => {
+          if (yPosition > 280) {
+            pdf.addPage()
+            yPosition = 20
+          }
+          pdf.text(line, 20, yPosition)
+          yPosition += 5
+        })
+
+        const levelSuffix = generateAllLevels ? "-all-levels" : `-${selectedLevel}`
+        const filename = `${config.title.toLowerCase().replace(/\s+/g, "-")}${levelSuffix}-markup.pdf`
+        pdf.save(filename)
+      }
+    } catch (error) {
+      console.error("[v0] PDF export error:", error)
+      alert("Failed to export PDF. Please try again.")
+    } finally {
+      setIsGeneratingPDF(false)
+    }
+  }
+
   const exportData = () => {
     const data = {
       components: customComponents,
       integrations: customIntegrations,
       settings,
+      selectedComponents,
+      selectedIntegrations,
+      config,
+      diagrams: {
+        markup: generateC4Markup(),
+        format: exportFormat,
+        allLevels: generateAllLevels,
+        selectedLevel,
+      },
       exportedAt: new Date().toISOString(),
     }
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = `c4-generator-config-${new Date().toISOString().split("T")[0]}.json`
+    a.download = `c4-generator-full-export-${new Date().toISOString().split("T")[0]}.json`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -222,6 +578,11 @@ export function SettingsModal({ open, onOpenChange, onComponentsUpdate, onIntegr
           if (data.settings) {
             setSettings((prev) => ({ ...prev, ...data.settings }))
           }
+          if (data.diagrams) {
+            setExportFormat(data.diagrams.format || "plantuml")
+            setGenerateAllLevels(data.diagrams.allLevels || false)
+            setSelectedLevel(data.diagrams.selectedLevel || "context")
+          }
         } catch (error) {
           console.error("Failed to import data:", error)
         }
@@ -232,21 +593,22 @@ export function SettingsModal({ open, onOpenChange, onComponentsUpdate, onIntegr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[80vw] max-w-7xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-screen h-screen !max-w-none overflow-y-auto p-6 rounded-none">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-25" />
-            Application Settings
+            <Settings className="h-5 w-5" />
+            Application Settings & Data Management
           </DialogTitle>
           <DialogDescription>
-            Configure your C4 Model Generator preferences and manage custom components
+            Configure your C4 Model Generator preferences, manage custom components, and handle data import/export
           </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="general">General</TabsTrigger>
             <TabsTrigger value="diagrams">Diagrams</TabsTrigger>
+            <TabsTrigger value="data">Data Management</TabsTrigger>
             <TabsTrigger value="export">Export</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
             <TabsTrigger value="components">Components</TabsTrigger>
@@ -257,67 +619,284 @@ export function SettingsModal({ open, onOpenChange, onComponentsUpdate, onIntegr
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Organization Settings</CardTitle>
-                <CardDescription>Configure your organization details</CardDescription>
+                <CardDescription>Configure your organization details and preferences</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="org-name">Organization Name</Label>
-                  <Input
-                    id="org-name"
-                    value={settings.organizationName}
-                    onChange={(e) => handleSettingChange("organizationName", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="default-title">Default Diagram Title</Label>
-                  <Input
-                    id="default-title"
-                    value={settings.defaultDiagramTitle}
-                    onChange={(e) => handleSettingChange("defaultDiagramTitle", e.target.value)}
-                  />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Auto-save Changes</Label>
-                    <p className="text-sm text-muted-foreground">Automatically save configuration changes</p>
-                  </div>
-                  <Switch
-                    checked={settings.autoSave}
-                    onCheckedChange={(checked) => handleSettingChange("autoSave", checked)}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Show Grid Lines</Label>
-                    <p className="text-sm text-muted-foreground">Display grid lines in diagram preview</p>
-                  </div>
-                  <Switch
-                    checked={settings.showGridLines}
-                    onCheckedChange={(checked) => handleSettingChange("showGridLines", checked)}
-                  />
-                </div>
-                <Separator />
-                <div className="flex gap-2">
-                  <Button onClick={exportData} variant="outline" className="flex items-center gap-2 bg-transparent">
-                    <FileDown className="h-4 w-4" />
-                    Export Configuration
-                  </Button>
-                  <div className="relative">
-                    <input
-                      type="file"
-                      accept=".json"
-                      onChange={importData}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="org-name">Organization Name</Label>
+                    <Input
+                      id="org-name"
+                      value={settings.organizationName}
+                      onChange={(e) => handleSettingChange("organizationName", e.target.value)}
                     />
-                    <Button variant="outline" className="flex items-center gap-2 bg-transparent">
-                      <Upload className="h-4 w-4" />
-                      Import Configuration
-                    </Button>
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="default-title">Default Diagram Title</Label>
+                    <Input
+                      id="default-title"
+                      value={settings.defaultDiagramTitle}
+                      onChange={(e) => handleSettingChange("defaultDiagramTitle", e.target.value)}
+                    />
+                  </div>
+                </div>
+                <Separator />
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Auto-save Changes</Label>
+                      <p className="text-sm text-muted-foreground">Automatically save configuration changes</p>
+                    </div>
+                    <Switch
+                      checked={settings.autoSave}
+                      onCheckedChange={(checked) => handleSettingChange("autoSave", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Show Grid Lines</Label>
+                      <p className="text-sm text-muted-foreground">Display grid lines in diagram preview</p>
+                    </div>
+                    <Switch
+                      checked={settings.showGridLines}
+                      onCheckedChange={(checked) => handleSettingChange("showGridLines", checked)}
+                    />
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    {theme === "dark" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                    <div className="space-y-0.5">
+                      <Label>Dark Mode</Label>
+                      <p className="text-sm text-muted-foreground">Toggle between light and dark themes</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={theme === "dark"}
+                    onCheckedChange={(checked) => handleSettingChange("darkMode", checked)}
+                  />
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="data" className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Database className="h-5 w-5" />
+                    Configuration Management
+                  </CardTitle>
+                  <CardDescription>Import and export application settings and custom data</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button onClick={exportData} variant="outline" className="flex items-center gap-2 bg-transparent">
+                      <FileDown className="h-4 w-4" />
+                      Export All Data
+                    </Button>
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept=".json"
+                        onChange={importData}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                      <Button variant="outline" className="w-full flex items-center gap-2 bg-transparent">
+                        <Upload className="h-4 w-4" />
+                        Import Data
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <h4 className="font-medium mb-2">Export Includes:</h4>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>• Application settings and preferences</li>
+                      <li>• Custom components and integrations</li>
+                      <li>• Selected components and integrations</li>
+                      <li>• Current diagram configuration</li>
+                      <li>• Generated markup and export settings</li>
+                    </ul>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Current Data Summary
+                  </CardTitle>
+                  <CardDescription>Overview of your current configuration</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 bg-primary/5 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-primary">{customComponents.length}</div>
+                      <div className="text-xs text-muted-foreground">Custom Components</div>
+                    </div>
+                    <div className="p-3 bg-secondary/5 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-secondary">{customIntegrations.length}</div>
+                      <div className="text-xs text-muted-foreground">Custom Integrations</div>
+                    </div>
+                    <div className="p-3 bg-accent/5 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-accent">{selectedComponents.length}</div>
+                      <div className="text-xs text-muted-foreground">Selected Components</div>
+                    </div>
+                    <div className="p-3 bg-muted/50 rounded-lg text-center">
+                      <div className="text-2xl font-bold">{selectedIntegrations.length}</div>
+                      <div className="text-xs text-muted-foreground">Selected Integrations</div>
+                    </div>
+                  </div>
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Shield className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Data Privacy</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      All data is stored locally in your browser. Export files contain only your configuration data.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="export" className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Download className="h-5 w-5" />
+                    Diagram Export Options
+                  </CardTitle>
+                  <CardDescription>Generate and export C4 model diagrams</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Layers className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-medium">Generate All C4 Levels</span>
+                    </div>
+                    <Button
+                      variant={generateAllLevels ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setGenerateAllLevels(!generateAllLevels)}
+                    >
+                      {generateAllLevels ? "All Levels" : "Single Level"}
+                    </Button>
+                  </div>
+
+                  {generateAllLevels && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Preview Level</Label>
+                      <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select level to preview" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="landscape">Level 0: System Landscape</SelectItem>
+                          <SelectItem value="context">Level 1: System Context</SelectItem>
+                          <SelectItem value="container">Level 2: Container</SelectItem>
+                          <SelectItem value="component">Level 3: Component</SelectItem>
+                          <SelectItem value="code">Level 4: Code</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Export Format</Label>
+                    <Select value={exportFormat} onValueChange={setExportFormat}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select export format" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="plantuml">
+                          <div className="flex flex-col items-start">
+                            <span>PlantUML C4 Model</span>
+                            <span className="text-xs text-muted-foreground">Industry standard, great for docs</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="mermaid">
+                          <div className="flex flex-col items-start">
+                            <span>Mermaid Diagram</span>
+                            <span className="text-xs text-muted-foreground">Modern, GitHub compatible</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="structurizr">
+                          <div className="flex flex-col items-start">
+                            <span>Structurizr DSL</span>
+                            <span className="text-xs text-muted-foreground">Architecture modeling platform</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button onClick={handleDownload} className="flex-1">
+                      <Download className="h-4 w-4 mr-2" />
+                      Download Markup
+                    </Button>
+                    <Button variant="outline" onClick={handleCopy} className="flex-1 bg-transparent">
+                      {copied ? <CheckCircle className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
+                      {copied ? "Copied!" : "Copy"}
+                    </Button>
+                  </div>
+
+                  <Button
+                    onClick={handleExportPDF}
+                    className="w-full"
+                    variant="secondary"
+                    disabled={selectedComponents.length === 0 || isGeneratingPDF}
+                  >
+                    <FileDown className={`h-4 w-4 mr-2 ${isGeneratingPDF ? "animate-pulse" : ""}`} />
+                    {isGeneratingPDF ? "Generating PDF..." : "Export as PDF"}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Generated Markup Preview</CardTitle>
+                  <CardDescription>Preview and copy the generated diagram markup</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex gap-2">
+                      <Badge variant="outline" className="capitalize">
+                        {exportFormat}
+                      </Badge>
+                      {generateAllLevels && <Badge variant="secondary">All Levels</Badge>}
+                    </div>
+                    <Button variant="outline" size="sm" onClick={handleCopy}>
+                      {copied ? <CheckCircle className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
+                      {copied ? "Copied!" : "Copy"}
+                    </Button>
+                  </div>
+                  <Textarea
+                    value={
+                      selectedComponents.length > 0 ? generateC4Markup() : "Select components to generate markup..."
+                    }
+                    readOnly
+                    className="font-mono text-sm min-h-64"
+                    placeholder="Generated markup will appear here..."
+                  />
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <h4 className="font-medium mb-2">Export Tips</h4>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>• Use PlantUML for professional documentation</li>
+                      <li>• Choose Mermaid for GitHub integration</li>
+                      <li>• Select Structurizr DSL for comprehensive modeling</li>
+                      {generateAllLevels && <li>• "All Levels" generates complete C4 model hierarchy</li>}
+                    </ul>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="diagrams" className="space-y-4">
@@ -386,58 +965,6 @@ export function SettingsModal({ open, onOpenChange, onComponentsUpdate, onIntegr
                   <Switch
                     checked={settings.showLegend}
                     onCheckedChange={(checked) => handleSettingChange("showLegend", checked)}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="export" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Download className="h-5 w-5" />
-                  Export Preferences
-                </CardTitle>
-                <CardDescription>Configure default export settings</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Default Export Format</Label>
-                  <Select
-                    value={settings.defaultFormat}
-                    onValueChange={(value) => handleSettingChange("defaultFormat", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="plantuml">PlantUML</SelectItem>
-                      <SelectItem value="mermaid">Mermaid</SelectItem>
-                      <SelectItem value="drawio">Draw.io</SelectItem>
-                      <SelectItem value="json">JSON</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Include Metadata</Label>
-                    <p className="text-sm text-muted-foreground">Add generation metadata to exports</p>
-                  </div>
-                  <Switch
-                    checked={settings.includeMetadata}
-                    onCheckedChange={(checked) => handleSettingChange("includeMetadata", checked)}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Compress Output</Label>
-                    <p className="text-sm text-muted-foreground">Minimize exported file size</p>
-                  </div>
-                  <Switch
-                    checked={settings.compressOutput}
-                    onCheckedChange={(checked) => handleSettingChange("compressOutput", checked)}
                   />
                 </div>
               </CardContent>

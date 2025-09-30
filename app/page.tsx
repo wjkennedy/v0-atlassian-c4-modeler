@@ -13,7 +13,9 @@ import { ExportPanel } from "@/components/export-panel"
 import { SettingsModal } from "@/components/settings-modal"
 import { PluginAsComponents } from "@/components/plugin-as-components"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { Building2, Network, Settings, Download, Eye, Layers, Package } from "lucide-react"
+import { Building2, Network, Settings, Download, Eye, Layers, Package, Database } from "lucide-react"
+import { DataManagementTab } from "@/components/data-management-tab"
+import type { C4Catalog } from "@/lib/c4-data-model"
 
 export default function C4GeneratorPage() {
   const [selectedComponents, setSelectedComponents] = useState<string[]>([])
@@ -27,6 +29,7 @@ export default function C4GeneratorPage() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [customComponents, setCustomComponents] = useState<any[]>([])
   const [customIntegrations, setCustomIntegrations] = useState<any[]>([])
+  const [catalog, setCatalog] = useState<C4Catalog | null>(null)
 
   const handleCustomComponentsUpdate = (components: any[]) => {
     setCustomComponents(components)
@@ -34,6 +37,11 @@ export default function C4GeneratorPage() {
 
   const handleCustomIntegrationsUpdate = (integrations: any[]) => {
     setCustomIntegrations(integrations)
+  }
+
+  const handleCatalogUpdate = (updatedCatalog: C4Catalog) => {
+    setCatalog(updatedCatalog)
+    console.log("[v0] Catalog updated:", updatedCatalog)
   }
 
   return (
@@ -112,7 +120,7 @@ export default function C4GeneratorPage() {
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="components" className="w-full">
-                  <TabsList className="grid w-full grid-cols-5 bg-muted/50 p-1 rounded-xl">
+                  <TabsList className="grid w-full grid-cols-6 bg-muted/50 p-1 rounded-xl">
                     <TabsTrigger
                       value="components"
                       className="flex items-center gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
@@ -133,6 +141,13 @@ export default function C4GeneratorPage() {
                     >
                       <Package className="h-4 w-4" />
                       Plugins
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="data"
+                      className="flex items-center gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                    >
+                      <Database className="h-4 w-4" />
+                      Data
                     </TabsTrigger>
                     <TabsTrigger
                       value="config"
@@ -173,6 +188,10 @@ export default function C4GeneratorPage() {
                       customComponents={customComponents}
                       onCustomComponentsChange={handleCustomComponentsUpdate}
                     />
+                  </TabsContent>
+
+                  <TabsContent value="data" className="mt-6">
+                    <DataManagementTab onCatalogUpdate={handleCatalogUpdate} />
                   </TabsContent>
 
                   <TabsContent value="config" className="mt-6">
@@ -250,6 +269,9 @@ export default function C4GeneratorPage() {
         onOpenChange={setSettingsOpen}
         onComponentsUpdate={handleCustomComponentsUpdate}
         onIntegrationsUpdate={handleCustomIntegrationsUpdate}
+        selectedComponents={selectedComponents}
+        selectedIntegrations={selectedIntegrations}
+        config={diagramConfig}
       />
     </div>
   )

@@ -23,7 +23,15 @@ import {
   ZoomIn,
 } from "lucide-react"
 import { createMultiLevelAtlassianC4Model } from "@/lib/c4-generator"
-import type { C4Element, C4Relationship, C4Catalog } from "@/lib/c4-data-model"
+import type {
+  C4Element,
+  C4Relationship,
+  C4Catalog,
+  ComponentDefinition,
+  IntegrationDefinition,
+  PluginDefinition,
+  InternalDefinition,
+} from "@/lib/c4-data-model"
 
 interface InteractiveExplorerProps {
   components: string[]
@@ -112,98 +120,95 @@ export function InteractiveExplorer({ components, integrations, plugins, config,
 
   const buildTreeFromCatalog = (catalog: C4Catalog): ExplorerNode[] => {
     const rootNodes: ExplorerNode[] = []
+    const allItems = [...catalog.components, ...catalog.integrations, ...catalog.plugins, ...(catalog.internal || [])]
 
-    // Build system nodes
-    catalog.systems?.forEach((system) => {
-      const systemNode: ExplorerNode = {
-        id: system.id,
-        name: system.name,
-        type: "system",
-        level: "landscape",
-        description: system.description,
+    console.log("[v0] Building tree from", allItems.length, "catalog items")
+
+    // Create a map of all items by ID for quick lookup
+    const itemMap = new Map<
+      string,
+      ComponentDefinition | IntegrationDefinition | PluginDefinition | InternalDefinition
+    >()
+    allItems.forEach((item) => itemMap.set(item.id, item))
+
+    // Create nodes for all items
+    const nodeMap = new Map<string, ExplorerNode>()
+    allItems.forEach((item) => {
+      const node: ExplorerNode = {
+        id: item.id,
+        name: item.name,
+        type: item.level || inferTypeFromItem(item),
+        level: mapLevelToExplorerLevel(item.level),
+        description: item.description,
+        technology: item.technology,
         children: [],
         relationships: [],
         element: {
-          id: system.id,
-          name: system.name,
-          type: "system",
-          description: system.description,
+          id: item.id,
+          name: item.name,
+          type: item.level || inferTypeFromItem(item),
+          description: item.description,
+          technology: item.technology,
+          parent: item.parentId || item.containerId || item.systemId,
         },
       }
-
-      // Build container nodes for this system
-      system.containers?.forEach((container) => {
-        const containerNode: ExplorerNode = {
-          id: container.id,
-          name: container.name,
-          type: "container",
-          level: "container",
-          description: container.description,
-          technology: container.technology,
-          children: [],
-          relationships: [],
-          element: {
-            id: container.id,
-            name: container.name,
-            type: "container",
-            description: container.description,
-            technology: container.technology,
-            parent: system.id,
-          },
-        }
-
-        // Build component nodes for this container
-        container.components?.forEach((component) => {
-          const componentNode: ExplorerNode = {
-            id: component.id,
-            name: component.name,
-            type: "component",
-            level: "component",
-            description: component.description,
-            technology: component.technology,
-            children: [],
-            relationships: [],
-            element: {
-              id: component.id,
-              name: component.name,
-              type: "component",
-              description: component.description,
-              technology: component.technology,
-              parent: container.id,
-            },
-          }
-
-          // Build code-level nodes (technologies) for this component
-          component.technologies?.forEach((tech, idx) => {
-            const codeNode: ExplorerNode = {
-              id: `${component.id}-tech-${idx}`,
-              name: tech,
-              type: "class",
-              level: "code",
-              technology: tech,
-              children: [],
-              relationships: [],
-              element: {
-                id: `${component.id}-tech-${idx}`,
-                name: tech,
-                type: "class",
-                technology: tech,
-                parent: component.id,
-              },
-            }
-            componentNode.children.push(codeNode)
-          })
-
-          containerNode.children.push(componentNode)
-        })
-
-        systemNode.children.push(containerNode)
-      })
-
-      rootNodes.push(systemNode)
+      nodeMap.set(item.id, node)
     })
 
+    // Build parent-child relationships
+    allItems.forEach((item) => {
+      const node = nodeMap.get(item.id)
+      if (!node) return
+
+      // Determine parent ID from hierarchy fields
+      const parentId = item.parentId || item.containerId || item.systemId
+
+      if (parentId) {
+        const parentNode = nodeMap.get(parentId)
+        if (parentNode) {
+          parentNode.children.push(node)
+        } else {
+          // Parent doesn't exist in catalog, add to root
+          rootNodes.push(node)
+        }
+      } else {
+        // No parent, this is a root node
+        rootNodes.push(node)
+      }
+    })
+
+    console.log("[v0] Built tree with", rootNodes.length, "root nodes")
     return rootNodes
+  }
+
+  const inferTypeFromItem = (
+    item: ComponentDefinition | IntegrationDefinition | PluginDefinition | InternalDefinition,
+  ): string => {
+    // Infer type from category or other fields if level is not set
+    if ("category" in item) {
+      const category = item.category.toLowerCase()
+      if (category.includes("system")) return "system"
+      if (category.includes("container")) return "container"
+      if (category.includes("component")) return "component"
+    }
+    return "component" // default
+  }
+
+  const mapLevelToExplorerLevel = (level?: string): "landscape" | "context" | "container" | "component" | "code" => {
+    if (!level) return "component"
+
+    switch (level) {
+      case "system":
+        return "landscape"
+      case "container":
+        return "container"
+      case "component":
+        return "component"
+      case "code":
+        return "code"
+      default:
+        return "component"
+    }
   }
 
   const buildHierarchy = (elements: C4Element[], relationships: C4Relationship[]): ExplorerNode[] => {

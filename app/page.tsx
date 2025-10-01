@@ -9,12 +9,12 @@ import { ComponentSelection } from "@/components/component-selection"
 import { IntegrationPanel } from "@/components/integration-panel"
 import { DiagramPreview } from "@/components/diagram-preview"
 import { ConfigurationPanel } from "@/components/configuration-panel"
-import { ExportPanel } from "@/components/export-panel"
 import { SettingsModal } from "@/components/settings-modal"
 import { PluginAsComponents } from "@/components/plugin-as-components"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { Building2, Network, Settings, Download, Eye, Layers, Package, Database } from "lucide-react"
+import { Building2, Network, Settings, Eye, Layers, Package, Database } from "lucide-react"
 import { DataManagementTab } from "@/components/data-management-tab"
+import { InteractiveExplorer } from "@/components/interactive-explorer"
 import type { C4Catalog } from "@/lib/c4-data-model"
 
 export default function C4GeneratorPage() {
@@ -158,11 +158,11 @@ export default function C4GeneratorPage() {
                       Configuration
                     </TabsTrigger>
                     <TabsTrigger
-                      value="export"
+                      value="explorer"
                       className="flex items-center gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                     >
-                      <Download className="h-4 w-4" />
-                      Export
+                      <Eye className="h-4 w-4" />
+                      Explorer
                     </TabsTrigger>
                   </TabsList>
 
@@ -199,10 +199,11 @@ export default function C4GeneratorPage() {
                     <ConfigurationPanel config={diagramConfig} onConfigChange={setDiagramConfig} />
                   </TabsContent>
 
-                  <TabsContent value="export" className="mt-6">
-                    <ExportPanel
-                      selectedComponents={selectedComponents}
-                      selectedIntegrations={selectedIntegrations}
+                  <TabsContent value="explorer" className="mt-6">
+                    <InteractiveExplorer
+                      components={selectedComponents}
+                      integrations={selectedIntegrations}
+                      plugins={selectedPlugins}
                       config={diagramConfig}
                     />
                   </TabsContent>

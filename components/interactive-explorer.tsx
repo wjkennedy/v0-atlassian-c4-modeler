@@ -22,6 +22,8 @@ import {
   Home,
   ZoomIn,
 } from "lucide-react"
+import { atlassianComponents } from "@/lib/component-data"
+import { integrations, internalConcerns } from "@/lib/integration-data"
 import { createMultiLevelAtlassianC4Model } from "@/lib/c4-generator"
 import type {
   C4Element,
@@ -63,7 +65,13 @@ interface Breadcrumb {
   level: "landscape" | "context" | "container" | "component" | "code"
 }
 
-export function InteractiveExplorer({ components, integrations, plugins, config, catalog }: InteractiveExplorerProps) {
+export function InteractiveExplorer({
+  components,
+  integrations: selectedIntegrations,
+  plugins,
+  config,
+  catalog,
+}: InteractiveExplorerProps) {
   const [explorerTree, setExplorerTree] = useState<ExplorerNode[]>([])
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
   const [selectedNode, setSelectedNode] = useState<ExplorerNode | null>(null)
@@ -78,29 +86,37 @@ export function InteractiveExplorer({ components, integrations, plugins, config,
     console.log("[v0] Building explorer tree...")
     console.log("[v0] Catalog:", catalog)
     console.log("[v0] Selected components:", components)
-    console.log("[v0] Selected integrations:", integrations)
+    console.log("[v0] Selected integrations:", selectedIntegrations)
     console.log("[v0] Selected plugins:", plugins)
     buildExplorerTree()
-  }, [components, integrations, plugins, config, catalog])
+  }, [components, selectedIntegrations, plugins, config, catalog])
 
   const buildExplorerTree = () => {
     try {
-      if (catalog && catalog.systems && catalog.systems.length > 0) {
-        console.log("[v0] Building tree from catalog")
-        const tree = buildTreeFromCatalog(catalog)
-        setExplorerTree(tree)
-        console.log("[v0] Explorer tree built from catalog:", tree)
-        return
-      }
-
-      // Fallback: Generate the C4 model from selections
-      if (components.length === 0 && integrations.length === 0 && plugins.length === 0) {
+      if (components.length === 0 && selectedIntegrations.length === 0 && plugins.length === 0) {
         console.log("[v0] No components, integrations, or plugins to render")
         setExplorerTree([])
         return
       }
 
-      const model = createMultiLevelAtlassianC4Model(components, integrations, plugins)
+      const tree = buildTreeFromSelections()
+      if (tree.length > 0) {
+        setExplorerTree(tree)
+        console.log("[v0] Explorer tree built from selections:", tree)
+        return
+      }
+
+      // Fallback to catalog if available
+      if (catalog && catalog.systems && catalog.systems.length > 0) {
+        console.log("[v0] Building tree from catalog")
+        const catalogTree = buildTreeFromCatalog(catalog)
+        setExplorerTree(catalogTree)
+        console.log("[v0] Explorer tree built from catalog:", catalogTree)
+        return
+      }
+
+      // Final fallback: Generate the C4 model from selections
+      const model = createMultiLevelAtlassianC4Model(components, selectedIntegrations, plugins)
 
       if (!model || !model.elements) {
         console.log("[v0] No model elements to explore")
@@ -109,13 +125,195 @@ export function InteractiveExplorer({ components, integrations, plugins, config,
       }
 
       // Build hierarchical tree from flat elements
-      const tree = buildHierarchy(model.elements, model.relationships || [])
-      setExplorerTree(tree)
-      console.log("[v0] Explorer tree built from model:", tree)
+      const modelTree = buildHierarchy(model.elements, model.relationships || [])
+      setExplorerTree(modelTree)
+      console.log("[v0] Explorer tree built from model:", modelTree)
     } catch (error) {
       console.error("[v0] Error building explorer tree:", error)
       setExplorerTree([])
     }
+  }
+
+  const buildTreeFromSelections = (): ExplorerNode[] => {
+    const rootNodes: ExplorerNode[] = []
+
+    // Combine all integrations
+    const allIntegrations = [...integrations, ...internalConcerns]
+
+    // Get selected component definitions
+    const selectedComponentDefs = atlassianComponents.filter((c) => components.includes(c.id))
+
+    // Get selected integration definitions
+    const selectedIntegrationDefs = allIntegrations.filter((i) => selectedIntegrations.includes(i.id))
+
+    // Get selected plugin definitions (plugins are loaded dynamically, so we'll handle them separately)
+    // For now, we'll create placeholder nodes for plugins
+    const selectedPluginDefs = plugins.map((pluginId) => ({
+      id: pluginId,
+      name: pluginId
+        .split("-")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" "),
+      description: "Atlassian Marketplace Plugin",
+      category: "Plugins",
+    }))
+
+    console.log(
+      "[v0] Building tree from",
+      selectedComponentDefs.length,
+      "components,",
+      selectedIntegrationDefs.length,
+      "integrations,",
+      selectedPluginDefs.length,
+      "plugins",
+    )
+
+    // Group by category to create a hierarchy
+    const categories = new Map<string, ExplorerNode>()
+
+    // Process components
+    selectedComponentDefs.forEach((comp) => {
+      const categoryName = comp.category || "Other"
+
+      // Get or create category node
+      if (!categories.has(categoryName)) {
+        categories.set(categoryName, {
+          id: `category-${categoryName.toLowerCase().replace(/\s+/g, "-")}`,
+          name: categoryName,
+          type: "system",
+          level: "context",
+          description: `${categoryName} components and services`,
+          children: [],
+          relationships: [],
+          element: {
+            id: `category-${categoryName.toLowerCase().replace(/\s+/g, "-")}`,
+            name: categoryName,
+            type: "system",
+            description: `${categoryName} components and services`,
+          },
+        })
+      }
+
+      // Create component node
+      const componentNode: ExplorerNode = {
+        id: comp.id,
+        name: comp.name,
+        type: "container",
+        level: "container",
+        description: comp.description,
+        technology: "Atlassian Cloud",
+        children: [],
+        relationships: [],
+        element: {
+          id: comp.id,
+          name: comp.name,
+          type: "container",
+          description: comp.description,
+          technology: "Atlassian Cloud",
+          parent: `category-${categoryName.toLowerCase().replace(/\s+/g, "-")}`,
+        },
+      }
+
+      categories.get(categoryName)!.children.push(componentNode)
+    })
+
+    // Process integrations
+    selectedIntegrationDefs.forEach((integration) => {
+      const categoryName = integration.category || "Other"
+
+      // Get or create category node
+      if (!categories.has(categoryName)) {
+        categories.set(categoryName, {
+          id: `category-${categoryName.toLowerCase().replace(/\s+/g, "-")}`,
+          name: categoryName,
+          type: "system",
+          level: "context",
+          description: `${categoryName} integrations and services`,
+          children: [],
+          relationships: [],
+          element: {
+            id: `category-${categoryName.toLowerCase().replace(/\s+/g, "-")}`,
+            name: categoryName,
+            type: "system",
+            description: `${categoryName} integrations and services`,
+          },
+        })
+      }
+
+      // Create integration node
+      const integrationNode: ExplorerNode = {
+        id: integration.id,
+        name: integration.name,
+        type: "external_system",
+        level: "context",
+        description: integration.description,
+        technology: integration.name,
+        children: [],
+        relationships: [],
+        element: {
+          id: integration.id,
+          name: integration.name,
+          type: "external_system",
+          description: integration.description,
+          technology: integration.name,
+          parent: `category-${categoryName.toLowerCase().replace(/\s+/g, "-")}`,
+        },
+      }
+
+      categories.get(categoryName)!.children.push(integrationNode)
+    })
+
+    // Process plugins
+    selectedPluginDefs.forEach((plugin) => {
+      const categoryName = plugin.category || "Plugins"
+
+      // Get or create category node
+      if (!categories.has(categoryName)) {
+        categories.set(categoryName, {
+          id: `category-${categoryName.toLowerCase().replace(/\s+/g, "-")}`,
+          name: categoryName,
+          type: "system",
+          level: "context",
+          description: `${categoryName} and extensions`,
+          children: [],
+          relationships: [],
+          element: {
+            id: `category-${categoryName.toLowerCase().replace(/\s+/g, "-")}`,
+            name: categoryName,
+            type: "system",
+            description: `${categoryName} and extensions`,
+          },
+        })
+      }
+
+      // Create plugin node
+      const pluginNode: ExplorerNode = {
+        id: plugin.id,
+        name: plugin.name,
+        type: "component",
+        level: "component",
+        description: plugin.description,
+        technology: "Atlassian Marketplace",
+        children: [],
+        relationships: [],
+        element: {
+          id: plugin.id,
+          name: plugin.name,
+          type: "component",
+          description: plugin.description,
+          technology: "Atlassian Marketplace",
+          parent: `category-${categoryName.toLowerCase().replace(/\s+/g, "-")}`,
+        },
+      }
+
+      categories.get(categoryName)!.children.push(pluginNode)
+    })
+
+    // Convert categories map to array
+    rootNodes.push(...Array.from(categories.values()))
+
+    console.log("[v0] Built tree with", rootNodes.length, "category nodes")
+    return rootNodes
   }
 
   const buildTreeFromCatalog = (catalog: C4Catalog): ExplorerNode[] => {

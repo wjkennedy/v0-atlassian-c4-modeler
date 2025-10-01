@@ -87,7 +87,8 @@ export default function C4GeneratorPage() {
                 Live Preview
               </CardTitle>
               <CardDescription className="text-base">
-                Real-time C4 diagram preview with Softpop aesthetics
+                Visualize your Atlassian architecture across multiple C4 levels - from system context to code. Select
+                components, integrations, and plugins below to generate PlantUML diagrams that document your solution.
               </CardDescription>
             </CardHeader>
             <CardContent>

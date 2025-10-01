@@ -205,6 +205,7 @@ export default function C4GeneratorPage() {
                       integrations={selectedIntegrations}
                       plugins={selectedPlugins}
                       config={diagramConfig}
+                      catalog={catalog}
                     />
                   </TabsContent>
                 </Tabs>

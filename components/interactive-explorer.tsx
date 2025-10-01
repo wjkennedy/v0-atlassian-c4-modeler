@@ -23,7 +23,7 @@ import {
   ZoomIn,
 } from "lucide-react"
 import { createMultiLevelAtlassianC4Model } from "@/lib/c4-generator"
-import type { C4Element, C4Relationship } from "@/lib/c4-data-model"
+import type { C4Element, C4Relationship, C4Catalog } from "@/lib/c4-data-model"
 
 interface InteractiveExplorerProps {
   components: string[]
@@ -34,15 +34,14 @@ interface InteractiveExplorerProps {
     level: string
     theme: string
   }
+  catalog: C4Catalog | null
 }
-
-type DiagramLevel = "landscape" | "context" | "container" | "component" | "code"
 
 interface ExplorerNode {
   id: string
   name: string
   type: string
-  level: DiagramLevel
+  level: "landscape" | "context" | "container" | "component" | "code"
   description?: string
   technology?: string
   children: ExplorerNode[]
@@ -53,26 +52,46 @@ interface ExplorerNode {
 interface Breadcrumb {
   id: string
   name: string
-  level: DiagramLevel
+  level: "landscape" | "context" | "container" | "component" | "code"
 }
 
-export function InteractiveExplorer({ components, integrations, plugins, config }: InteractiveExplorerProps) {
+export function InteractiveExplorer({ components, integrations, plugins, config, catalog }: InteractiveExplorerProps) {
   const [explorerTree, setExplorerTree] = useState<ExplorerNode[]>([])
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
   const [selectedNode, setSelectedNode] = useState<ExplorerNode | null>(null)
   const [focusedNode, setFocusedNode] = useState<ExplorerNode | null>(null)
-  const [currentLevel, setCurrentLevel] = useState<DiagramLevel>("container")
+  const [currentLevel, setCurrentLevel] = useState<"landscape" | "context" | "container" | "component" | "code">(
+    "container",
+  )
   const [showRelationships, setShowRelationships] = useState(true)
   const [breadcrumbs, setBreadcrumbs] = useState<Breadcrumb[]>([])
 
   useEffect(() => {
     console.log("[v0] Building explorer tree...")
+    console.log("[v0] Catalog:", catalog)
+    console.log("[v0] Selected components:", components)
+    console.log("[v0] Selected integrations:", integrations)
+    console.log("[v0] Selected plugins:", plugins)
     buildExplorerTree()
-  }, [components, integrations, plugins, config])
+  }, [components, integrations, plugins, config, catalog])
 
   const buildExplorerTree = () => {
     try {
-      // Generate the C4 model
+      if (catalog && catalog.systems && catalog.systems.length > 0) {
+        console.log("[v0] Building tree from catalog")
+        const tree = buildTreeFromCatalog(catalog)
+        setExplorerTree(tree)
+        console.log("[v0] Explorer tree built from catalog:", tree)
+        return
+      }
+
+      // Fallback: Generate the C4 model from selections
+      if (components.length === 0 && integrations.length === 0 && plugins.length === 0) {
+        console.log("[v0] No components, integrations, or plugins to render")
+        setExplorerTree([])
+        return
+      }
+
       const model = createMultiLevelAtlassianC4Model(components, integrations, plugins)
 
       if (!model || !model.elements) {
@@ -84,11 +103,107 @@ export function InteractiveExplorer({ components, integrations, plugins, config 
       // Build hierarchical tree from flat elements
       const tree = buildHierarchy(model.elements, model.relationships || [])
       setExplorerTree(tree)
-      console.log("[v0] Explorer tree built:", tree)
+      console.log("[v0] Explorer tree built from model:", tree)
     } catch (error) {
       console.error("[v0] Error building explorer tree:", error)
       setExplorerTree([])
     }
+  }
+
+  const buildTreeFromCatalog = (catalog: C4Catalog): ExplorerNode[] => {
+    const rootNodes: ExplorerNode[] = []
+
+    // Build system nodes
+    catalog.systems?.forEach((system) => {
+      const systemNode: ExplorerNode = {
+        id: system.id,
+        name: system.name,
+        type: "system",
+        level: "landscape",
+        description: system.description,
+        children: [],
+        relationships: [],
+        element: {
+          id: system.id,
+          name: system.name,
+          type: "system",
+          description: system.description,
+        },
+      }
+
+      // Build container nodes for this system
+      system.containers?.forEach((container) => {
+        const containerNode: ExplorerNode = {
+          id: container.id,
+          name: container.name,
+          type: "container",
+          level: "container",
+          description: container.description,
+          technology: container.technology,
+          children: [],
+          relationships: [],
+          element: {
+            id: container.id,
+            name: container.name,
+            type: "container",
+            description: container.description,
+            technology: container.technology,
+            parent: system.id,
+          },
+        }
+
+        // Build component nodes for this container
+        container.components?.forEach((component) => {
+          const componentNode: ExplorerNode = {
+            id: component.id,
+            name: component.name,
+            type: "component",
+            level: "component",
+            description: component.description,
+            technology: component.technology,
+            children: [],
+            relationships: [],
+            element: {
+              id: component.id,
+              name: component.name,
+              type: "component",
+              description: component.description,
+              technology: component.technology,
+              parent: container.id,
+            },
+          }
+
+          // Build code-level nodes (technologies) for this component
+          component.technologies?.forEach((tech, idx) => {
+            const codeNode: ExplorerNode = {
+              id: `${component.id}-tech-${idx}`,
+              name: tech,
+              type: "class",
+              level: "code",
+              technology: tech,
+              children: [],
+              relationships: [],
+              element: {
+                id: `${component.id}-tech-${idx}`,
+                name: tech,
+                type: "class",
+                technology: tech,
+                parent: component.id,
+              },
+            }
+            componentNode.children.push(codeNode)
+          })
+
+          containerNode.children.push(componentNode)
+        })
+
+        systemNode.children.push(containerNode)
+      })
+
+      rootNodes.push(systemNode)
+    })
+
+    return rootNodes
   }
 
   const buildHierarchy = (elements: C4Element[], relationships: C4Relationship[]): ExplorerNode[] => {
@@ -131,7 +246,7 @@ export function InteractiveExplorer({ components, integrations, plugins, config 
     return rootNodes
   }
 
-  const mapTypeToLevel = (type: string): DiagramLevel => {
+  const mapTypeToLevel = (type: string): "landscape" | "context" | "container" | "component" | "code" => {
     switch (type) {
       case "system":
         return "landscape"
@@ -349,7 +464,11 @@ export function InteractiveExplorer({ components, integrations, plugins, config 
     )
   }
 
-  const levelBadges: { level: DiagramLevel; label: string; icon: any }[] = [
+  const levelBadges: {
+    level: "landscape" | "context" | "container" | "component" | "code"
+    label: string
+    icon: any
+  }[] = [
     { level: "landscape", label: "Landscape", icon: Layers },
     { level: "context", label: "Context", icon: Box },
     { level: "container", label: "Container", icon: Container },

@@ -162,11 +162,13 @@ graph TD
     model {
 `
 
+    const elements = this.model.elements || []
+
     // Group elements by type
-    const people = this.model.elements.filter((e) => e.type === "person")
-    const systems = this.model.elements.filter((e) => e.type === "system")
-    const containers = this.model.elements.filter((e) => e.type === "container")
-    const components = this.model.elements.filter((e) => e.type === "component")
+    const people = elements.filter((e) => e.type === "person")
+    const systems = elements.filter((e) => e.type === "system")
+    const containers = elements.filter((e) => e.type === "container")
+    const components = elements.filter((e) => e.type === "component")
 
     // Add people
     people.forEach((person) => {
@@ -1243,9 +1245,15 @@ function getIntegrationData(id: string) {
 }
 
 function getChildrenOf(catalog: C4Catalog, parentId: string): C4Element[] {
+  if (!catalog || !catalog.items) {
+    return []
+  }
   return catalog.items.filter((item) => item.parent === parentId)
 }
 
 function getItemsInContainer(catalog: C4Catalog, containerId: string): C4Element[] {
+  if (!catalog || !catalog.items) {
+    return []
+  }
   return catalog.items.filter((item) => item.parent === containerId)
 }
